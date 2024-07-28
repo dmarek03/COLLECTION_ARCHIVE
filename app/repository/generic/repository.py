@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Type, Self
 from datetime import datetime, date
 from mysql.connector.pooling import MySQLConnectionPool,Error
 import logging
@@ -21,6 +21,11 @@ class CrudRepository:
 
 
     def insert(self, item:Any) -> int:
+
+        if  equal_item_id := self.get_equal_item_id(item):
+            print(f'{equal_item_id=}')
+            return equal_item_id
+
 
         try:
             sql = f'''
@@ -245,6 +250,31 @@ class CrudRepository:
 
 
 
+    def get_equal_item_id(self, item: Any) -> int:
+        print(f'{self._columns_and_values_for_selecting(item)=}')
+        try:
+            sql = f' select *  from {self._table_name()} where {self._columns_and_values_for_selecting(item)}'
+
+            connection = self.connection_pool.get_connection()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                cursor.execute(sql)
+                item = cursor.fetchall()
+
+
+                return self.entity(*item[0]).id_ if item else None
+
+        except Error as err:
+            logging.error(err)
+            connection.rollback()
+
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
+
+
     def _columns_names_for_insert(self) -> str:
         keys = [key for key in self._field_names() if key.lower() != 'id_']
         return ', '.join(keys)
@@ -261,3 +291,7 @@ class CrudRepository:
 
     def _column_names_and_values_for_update(self,item:Any) -> str:
         return ', '.join([f'{key}={self._to_str(value)}' for key,value in item.__dict__.items() if key.lower() != 'id_'])
+
+    def _columns_and_values_for_selecting(self, item: Any) -> str:
+        return ' '.join(
+            [f'{key}={self._to_str(value)} and ' for key, value in item.__dict__.items() if key.lower() != 'id_'])[:-4]
