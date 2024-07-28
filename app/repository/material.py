@@ -15,7 +15,8 @@ class MaterialRepository(CrudRepository):
             create_material_table = '''
                 create table if not exists materials(
                     id integer primary key auto_increment,
-                    name varchar(50) not null
+                    name varchar(50) not null,
+                    unique(name)
                 )
 
             '''

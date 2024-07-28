@@ -14,7 +14,8 @@ class DatingRepository(CrudRepository):
                 create table if not exists datings(
                     id integer primary key auto_increment,
                     name varchar(50) not null,
-                    year integer default null
+                    year integer default null,
+                    unique (name, year)
                 )
             
             '''
@@ -31,4 +32,27 @@ class DatingRepository(CrudRepository):
             if connection.is_connected():
                 cursor.close()
                 connection.close()
+
+
+
+    def get_all_years(self, descending: bool) -> list[int]:
+        try:
+            sql = f' select year from datings order by year'
+            sql += ' desc' if descending else ''
+
+            connection = self.connection_pool.get_connection()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                cursor.execute(sql)
+
+
+                return [year for year in cursor.fetchall()]
+        except Error as err:
+            logging.error(err)
+            connection.rollback()
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
 

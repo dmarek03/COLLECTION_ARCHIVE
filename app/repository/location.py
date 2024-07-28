@@ -16,7 +16,11 @@ class LocationRepository(CrudRepository):
                 create table if not exists locations(
                     id integer primary key auto_increment,
                     name varchar(50) not null,
-                    coordinates varchar(50) default null
+                    latitude double default null,
+                    longitude double default null,
+                    latitude_direction varchar(3) default null, 
+                    longitude_direction varchar(3) default null,
+                    unique(name,latitude,longitude,latitude_direction, longitude_direction)
                 )
 
             '''

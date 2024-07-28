@@ -19,6 +19,7 @@ class LocalityRepository(CrudRepository):
                     id integer primary key auto_increment,
                     name varchar(50) not null,
                     location_id integer,
+                    unique (name),
                     foreign key (location_id) references locations(id) on delete cascade on update cascade 
                 )'''
 

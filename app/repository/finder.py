@@ -13,7 +13,8 @@ class FinderRepository(CrudRepository):
             create_finder_table = '''
                 create table if not exists finders(
                     id integer primary key auto_increment,
-                    name varchar(50) not null
+                    name varchar(50) not null,
+                    unique (name)
                 )
 
             '''
