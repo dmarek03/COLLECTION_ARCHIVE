@@ -1,26 +1,20 @@
 from .generic.repository import CrudRepository
-from app.model import Location
+from app.persistance.model import Finder
 from mysql.connector.pooling import MySQLConnectionPool, Error
 import logging
-
-
-class LocationRepository(CrudRepository):
+class FinderRepository(CrudRepository):
 
     def __init__(self, connection_pool: MySQLConnectionPool):
-        super().__init__(connection_pool, Location)
+        super().__init__(connection_pool, Finder)
         self._create_table()
 
     def _create_table(self):
         try:
-            create_location_table = '''
-                create table if not exists locations(
+            create_finder_table = '''
+                create table if not exists finders(
                     id integer primary key auto_increment,
                     name varchar(50) not null,
-                    latitude double default null,
-                    longitude double default null,
-                    latitude_direction varchar(3) default null, 
-                    longitude_direction varchar(3) default null,
-                    unique(name,latitude,longitude,latitude_direction, longitude_direction)
+                    unique (name)
                 )
 
             '''
@@ -28,7 +22,7 @@ class LocationRepository(CrudRepository):
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
                 cursor = connection.cursor()
-                cursor.execute(create_location_table)
+                cursor.execute(create_finder_table)
                 connection.commit()
         except Error as err:
             logging.error(err)
@@ -37,5 +31,3 @@ class LocationRepository(CrudRepository):
             if connection.is_connected():
                 cursor.close()
                 connection.close()
-
-

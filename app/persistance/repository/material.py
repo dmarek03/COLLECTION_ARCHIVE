@@ -1,5 +1,5 @@
 from .generic.repository import CrudRepository
-from app.model import Material
+from app.persistance.model import Material
 from mysql.connector.pooling import MySQLConnectionPool, Error
 import logging
 

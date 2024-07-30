@@ -1,5 +1,5 @@
 from .generic.repository import CrudRepository
-from app.model import Dating
+from app.persistance.model import Dating
 from mysql.connector.pooling import MySQLConnectionPool, Error
 import logging
 class DatingRepository(CrudRepository):
@@ -46,7 +46,7 @@ class DatingRepository(CrudRepository):
                 cursor.execute(sql)
 
 
-                return [year for year in cursor.fetchall()]
+                return [year[0] for year in cursor.fetchall()]
         except Error as err:
             logging.error(err)
             connection.rollback()

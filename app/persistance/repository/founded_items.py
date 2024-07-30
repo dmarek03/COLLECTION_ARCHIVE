@@ -1,8 +1,8 @@
 from .generic.repository import CrudRepository
-from app.model import FoundedItems, FinalItem
+from app.persistance.model import FoundedItems, FinalItem
 from mysql.connector.pooling import MySQLConnectionPool, Error
 import logging
-from typing import Any
+
 
 class FoundedItemsRepository(CrudRepository):
 

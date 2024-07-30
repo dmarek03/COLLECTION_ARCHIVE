@@ -1,34 +1,34 @@
 from .generic.repository import CrudRepository
-from app.model import Locality
+from app.persistance.model import Location
 from mysql.connector.pooling import MySQLConnectionPool, Error
 import logging
 
 
-class LocalityRepository(CrudRepository):
+class LocationRepository(CrudRepository):
 
     def __init__(self, connection_pool: MySQLConnectionPool):
-        super().__init__(connection_pool, Locality)
+        super().__init__(connection_pool, Location)
         self._create_table()
-
-
 
     def _create_table(self):
         try:
-            create_locality_table = '''
-             create table if not exists localities(
+            create_location_table = '''
+                create table if not exists locations(
                     id integer primary key auto_increment,
                     name varchar(50) not null,
-                    location_id integer,
-                    unique (name),
-                    foreign key (location_id) references locations(id) on delete cascade on update cascade 
-                )'''
+                    latitude double default null,
+                    longitude double default null,
+                    latitude_direction varchar(3) default null, 
+                    longitude_direction varchar(3) default null,
+                    unique(name,latitude,longitude,latitude_direction, longitude_direction)
+                )
 
-
+            '''
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
                 cursor = connection.cursor()
-                cursor.execute(create_locality_table)
+                cursor.execute(create_location_table)
                 connection.commit()
         except Error as err:
             logging.error(err)
@@ -37,7 +37,5 @@ class LocalityRepository(CrudRepository):
             if connection.is_connected():
                 cursor.close()
                 connection.close()
-
-
 
 
