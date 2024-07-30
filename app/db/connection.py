@@ -1,19 +1,36 @@
 from mysql.connector.pooling import MySQLConnectionPool
-from typing import Self
-from dataclasses import dataclass
+from typing import Self, Any
+import os
+from dotenv import load_dotenv
 
-@dataclass
+load_dotenv()
+
+connection_params = dict(
+    pool_name='my_pool',
+    pool_size=5,
+    pool_reset_session=True,
+    host=os.getenv('HOST', default='localhost'),
+    database=os.getenv('DATABASE', default='db_1'),
+    user=os.getenv('USER',default='user'),
+    password=os.getenv('PASSWORD',default='user1234'),
+    port=int(os.getenv('PORT',default=3307))
+
+)
+
+
 class MySqlConnectionPoolBuilder:
-    pool_config = {
-        'pool_name' : 'mysql_connection_pool',
-        'pool_size': 5,
-        'pool_reset_session': True,
-        'host': 'localhost',
-        'user': 'user',
-        'password': 'user1234',
-        'database': 'db_2',
-        'port': 3307
-    }
+    def __init__(self, params:dict[str, Any] = None):
+        params = {} if not params else params
+        self.pool_config = {
+            'pool_name' : 'mysql_connection_pool',
+            'pool_size': 5,
+            'pool_reset_session': True,
+            'host': 'localhost',
+            'database': 'db_2',
+            'user': 'user',
+            'password': 'user1234',
+            'port': 3307
+        } | params
 
 
     def set_pool_size(self, new_pool_size: int) -> Self:
@@ -45,9 +62,18 @@ class MySqlConnectionPoolBuilder:
         return MySQLConnectionPool(**self.pool_config)
 
 
+    @classmethod
+    def builder(cls) -> Self:
+        return cls()
+
+
 def get_connection_pool():
-    return MySqlConnectionPoolBuilder().build()
+    return MySqlConnectionPoolBuilder(connection_params).builder().build()
 
 
 def get_connection_test_pool():
-    return MySqlConnectionPoolBuilder().set_port(3308).build()
+    return MySqlConnectionPoolBuilder().builder().set_port(3308).build()
+
+
+
+connection_pool = get_connection_pool()
