@@ -12,14 +12,14 @@ class MaterialRepository(CrudRepository):
 
     def _create_table(self):
         try:
-            create_material_table = '''
+            create_material_table = """
                 create table if not exists materials(
                     id integer primary key auto_increment,
                     name varchar(50) not null,
                     unique(name)
                 )
 
-            '''
+            """
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
@@ -34,3 +34,22 @@ class MaterialRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
+    def get_all_material_name(self, descending: bool) -> list[str]:
+
+        try:
+            sql = f" select name from materials order by name"
+            sql += " desc" if descending else ""
+
+            connection = self.connection_pool.get_connection()
+            if connection.is_connected():
+                cursor = connection.cursor()
+                cursor.execute(sql)
+
+                return [m_name[0] for m_name in cursor.fetchall()]
+        except Error as err:
+            logging.error(err)
+            connection.rollback()
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
