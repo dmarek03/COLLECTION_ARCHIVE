@@ -6,8 +6,15 @@ name = "pypi"
 [packages]
 mysql-connector-python = "*"
 inflection = "*"
+coverage = "*"
+numpy = "*"
+opencv-python = "*"
+pyqt6 = "*"
+python-dotenv = "*"
+matplotlib = "*"
 
 [dev-packages]
+pytest = "*"
 
 [requires]
 python_version = "3.11"
