@@ -20,7 +20,7 @@ class StartPage(QMainWindow):
         self.main_widget = self.create_main_widget()
         self.stacked_widget.addWidget(self.main_widget)
 
-        my_collection_window = CollectionPage(self.stacked_widget)
+        my_collection_window = CollectionPage(self.stacked_widget, 5)
         add_item_window = AddItemPage(self.stacked_widget)
 
         self.stacked_widget.addWidget(my_collection_window)
@@ -55,7 +55,6 @@ class StartPage(QMainWindow):
 
         label.setGraphicsEffect(glow_effect)
 
-        # Przyciski
         my_collection_button = QPushButton("My Collection")
         add_item_button = QPushButton("Add Item")
 
@@ -69,7 +68,6 @@ class StartPage(QMainWindow):
 
         add_item_button.setStyleSheet(main_button_style)
 
-        # Układ w siatce
         layout.addWidget(label, 0, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(my_collection_button, 1, 0, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(add_item_button, 1, 1, Qt.AlignmentFlag.AlignCenter)
