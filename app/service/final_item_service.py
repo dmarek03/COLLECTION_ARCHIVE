@@ -59,8 +59,10 @@ class FinalItemService:
             FoundedItems(
                 name=create_final_item_dto.name,
                 description=create_final_item_dto.description,
-                image_data=create_final_item_dto.image_data,
+                first_image_data=create_final_item_dto.first_image_data,
+                second_image_data=create_final_item_dto.second_image_data,
                 quantity=create_final_item_dto.quantity,
+                finding_date=create_final_item_dto.finding_date,
                 addition_date=create_final_item_dto.addition_date,
                 finder_id=finder_id,
                 location_id=location_id,
