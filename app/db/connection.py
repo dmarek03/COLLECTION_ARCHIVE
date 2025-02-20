@@ -22,15 +22,15 @@ class MySqlConnectionPoolBuilder:
     def __init__(self, params: dict[str, Any] = None):
         params = {} if not params else params
         self.pool_config = {
-            "pool_name": "mysql_connection_pool",
-            "pool_size": 5,
-            "pool_reset_session": True,
-            "host": "localhost",
-            "database": "db_2",
-            "user": "user",
-            "password": "user1234",
-            "port": 3307,
-        } | params
+                               "pool_name": "mysql_connection_pool",
+                               "pool_size": 5,
+                               "pool_reset_session": True,
+                               "host": "localhost",
+                               "database": "db_2",
+                               "user": "user",
+                               "password": "user1234",
+                               "port": 3307,
+                           } | params
 
     def set_pool_size(self, new_pool_size: int) -> Self:
         self.pool_config["pool_size"] = new_pool_size
@@ -71,7 +71,6 @@ def get_connection_test_pool():
 
 
 def initialize_triggers(connection_pool: MySQLConnectionPool) -> int:
-
     with open("db/triggers.sql", "r") as f:
         print(f"{f=}")
         triggers_sql = f.read()
@@ -93,7 +92,6 @@ def initialize_triggers(connection_pool: MySQLConnectionPool) -> int:
 
 
 def create_tables(connection_pool: MySQLConnectionPool):
-
     try:
         create_datings_table_sql = """
             create table if not exists datings(

@@ -12,5 +12,10 @@ locality_repository = LocalityRepository(connection_pool=connection_pool)
 location_repository = LocationRepository(connection_pool=connection_pool)
 material_repository = MaterialRepository(connection_pool=connection_pool)
 founded_items_repository = FoundedItemsRepository(connection_pool=connection_pool)
-if not (x := initialize_triggers(connection_pool=connection_pool)):
+
+
+trigger_initialized = False
+if not trigger_initialized:
+
     initialize_triggers(connection_pool=connection_pool)
+    trigger_initialized = True
