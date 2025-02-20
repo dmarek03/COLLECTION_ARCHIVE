@@ -29,11 +29,9 @@ class StartPage(QMainWindow):
 
         self.main_widget.setStyleSheet(
             """
-
                         background-image: url('main_background.png');
                         background-position: center;
                         background-size: cover; /* Dopasowanie obrazu do rozmiaru okna */
-
                 """
         )
         self.show()
