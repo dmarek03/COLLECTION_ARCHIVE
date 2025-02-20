@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, date
 from abc import ABC
 
 
@@ -12,8 +12,10 @@ class BaseTable(ABC):
 @dataclass
 class FoundedItems(BaseTable):
     description: str | None = None
-    image_data: bytes | None = None
+    first_image_data: bytes | None = None
+    second_image_data: bytes | None = None
     quantity: int | None = 0
+    finding_date: date | None = None
     addition_date: datetime | None = None
     finder_id: int | None = None
     location_id: int | None = None
