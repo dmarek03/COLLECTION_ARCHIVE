@@ -55,8 +55,7 @@ class DatingRepository(CrudRepository):
 
     def get_all_years(self, descending: bool) -> list[int]:
         try:
-            sql = f" select year from datings order by year"
-            sql += " desc" if descending else ""
+            sql = f" select year from datings order by year {'desc' if descending else ''}"
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():

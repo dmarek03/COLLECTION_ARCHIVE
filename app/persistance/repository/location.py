@@ -43,8 +43,7 @@ class LocationRepository(CrudRepository):
     def get_all_location_name(self, descending: bool) -> list[str]:
 
         try:
-            sql = f" select name from locations order by name"
-            sql += " desc" if descending else ""
+            sql = f" select name from locations order by name {'desc' if descending else ''}"
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
