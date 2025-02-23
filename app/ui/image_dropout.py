@@ -7,6 +7,9 @@ class PhotoLabel(QLabel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.init_ui()
+
+    def init_ui(self) -> None:
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText("\n\n Drop Image Here \n\n")
         self.setStyleSheet(
@@ -64,6 +67,7 @@ class PhotoDropout(QWidget):
         else:
             event.ignore()
 
+    # TODO Think about showing scaled image but saving data from original image
     def open_image(self, filename=None):
         if not filename:
             filename, _ = QFileDialog.getOpenFileName(
@@ -74,7 +78,7 @@ class PhotoDropout(QWidget):
 
         pixmap = QPixmap(filename)
         min_size = QSize(200, 200)
-        max_size = QSize(500, 500)
+        max_size = QSize(400, 400)
 
         scaled_pixmap = pixmap.scaled(
             max_size,
@@ -97,6 +101,10 @@ class PhotoDropout(QWidget):
         if not self.photo.is_empty():
             return self.photo.pixmap()
         return None
+
+    def clear(self) -> None:
+        self.photo.clear()
+        self.photo.init_ui()
 
     def convert_to_bytes(self):
         if pixmap := self.get_image():
