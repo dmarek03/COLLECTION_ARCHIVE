@@ -4,6 +4,7 @@ from datetime import datetime, date
 
 @dataclass
 class CreateFinalItemDto:
+    id: int | None = None
     name: str | None = None
     description: str | None = None
     first_image_data: bytes | None = None
@@ -21,6 +22,7 @@ class CreateFinalItemDto:
     material_name: str | None = None
     epoch_name: str | None = None
     year: int | str = None
+
 
     def __repr__(self):
         return f"""
