@@ -14,9 +14,9 @@ class FoundedItemsRepository(CrudRepository):
         super().__init__(connection_pool, FoundedItems)
         self._create_table()
         self.select_all_items_info_sql_statement = f"""
-                       select f.name, f.description, f.first_image_data,f.second_image_data,f.quantity, f.finding_date,
-                       f.addition_date,fd.name, l.name,ll.name,ll.latitude, ll.longitude, ll.latitude_direction, 
-                       ll.longitude_direction, m.name, d.name, d.year
+                       select f.id, f.name, f.description, f.first_image_data,f.second_image_data,f.quantity, 
+                       f.finding_date, f.addition_date,fd.name, l.name,ll.name,ll.latitude, ll.longitude, 
+                       ll.latitude_direction, ll.longitude_direction, m.name, d.name, d.year
                        from founded_items f
                        join datings d on d.id = f.dating_id
                        join finders fd on fd.id = f.finder_id
