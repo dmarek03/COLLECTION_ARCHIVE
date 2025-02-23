@@ -1,4 +1,4 @@
-from image_dropout import PhotoDropout
+from app.ui.image_dropout import PhotoDropout
 from app.service.dto import CreateFinalItemDto
 from PyQt6.QtCore import Qt, QRegularExpression, QDate
 from app.utilities.button_style import main_button_style
@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QStyledItemDelegate,
 )
-from datetime import date
+from app.service.final_item_service import FinalItemService
+from mysql.connector.pooling import Error
 
 
 class CenteredDelegate(QStyledItemDelegate):
@@ -25,8 +26,9 @@ class CenteredDelegate(QStyledItemDelegate):
 
 
 class AddItemPage(QWidget):
-    def __init__(self, stacked_widget):
+    def __init__(self, item_service: FinalItemService, stacked_widget):
         super().__init__()
+        self.item_service = item_service
         self.item_name = QLineEdit(self)
         self.description = QTextEdit(self)
         self.first_image = PhotoDropout()
@@ -161,6 +163,7 @@ class AddItemPage(QWidget):
 
         layout.setRowMinimumHeight(0, 40)
         layout.setColumnMinimumWidth(1, 150)
+        layout.setColumnMinimumWidth(3, 150)
         layout.setColumnMinimumWidth(5, 200)
         layout.setColumnMinimumWidth(7, 200)
         layout.setSpacing(10)
@@ -171,6 +174,24 @@ class AddItemPage(QWidget):
 
         widget.setStyleSheet("")
         widget.setPlaceholderText("")
+
+    def reset_fields(self):
+        self.item_name.clear()
+        self.description.clear()
+        self.first_image.clear()
+        self.second_image.clear()
+        self.finding_date.setDate(QDate.currentDate())
+        self.quantity.clear()
+        self.finder_name.clear()
+        self.locality_name.clear()
+        self.location_name.clear()
+        self.latitude.clear()
+        self.longitude.clear()
+        self.latitude_direction.setCurrentIndex(0)
+        self.longitude_direction.setCurrentIndex(0)
+        self.material_name.clear()
+        self.epoch_name.clear()
+        self.year.clear()
 
     def setup_signals(self):
 
@@ -269,7 +290,7 @@ class AddItemPage(QWidget):
                 description=self.description.toPlainText(),
                 first_image_data=self.first_image.convert_to_bytes(),
                 second_image_data=self.second_image.convert_to_bytes(),
-                finding_date=self.finding_date.text(),
+                finding_date=self.finding_date.date().toString("yyyy-MM-dd"),
                 quantity=int(self.quantity.text()),
                 finder_name=self.finder_name.text(),
                 locality_name=self.locality_name.text(),
@@ -282,8 +303,16 @@ class AddItemPage(QWidget):
                 epoch_name=self.epoch_name.text(),
                 year=int(self.year.text()) if self.year.text() else None,
             )
-            print(item)
-            QMessageBox.information(self, "Submission correct", "Item saved correctly")
+
+            try:
+                self.item_service.add_final_item(create_final_item_dto=item)
+
+            except Error as err:
+                QMessageBox.warning(self, 'Submission incorrect', err.msg)
+
+            finally:
+                QMessageBox.information(self, "Submission correct", "Item saved correctly")
+                self.reset_fields()
 
     def go_to_start_window(self):
         self.stacked_widget.setCurrentIndex(0)
