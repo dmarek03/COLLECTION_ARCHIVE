@@ -16,5 +16,6 @@ item_attributes_to_db_column_mapping = {
     'Longitude direction': 'll.longitude_direction',
     'Material name': 'm.name',
     'Epoch name': 'd.name',
-    'Year': 'd.year'
+    'Year': 'd.year',
+    'Default': 'default'
 }
