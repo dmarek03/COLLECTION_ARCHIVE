@@ -3,12 +3,14 @@ from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QVBoxLayout, QHBoxLayout, QPushButton, QLayout, QMessageBox
 from app.service.dto import CreateFinalItemDto
 from app.utilities.button_style import main_button_style
-from item_single_page import ItemSinglePage
+from app.ui.item_single_page import ItemSinglePage
+from app.service.final_item_service import FinalItemService
 
 
 class CollectionSinglePage(QWidget):
-    def __init__(self, stacked_widget, page_idx: int, item_list: list[CreateFinalItemDto]):
+    def __init__(self, item_service: FinalItemService, stacked_widget, page_idx: int, item_list: list[CreateFinalItemDto]):
         super().__init__()
+        self.item_service = item_service
         self.stacked_widget = stacked_widget
         self.page_idx = page_idx
         self.item_list = item_list
@@ -96,6 +98,7 @@ class CollectionSinglePage(QWidget):
 
     # TODO think about better way to delete items, i.g adding special uuid to or something like that
     def delete_item(self, item) -> None:
+
         button = QMessageBox.question(
             self,
             'Item delete confirmation',
@@ -109,9 +112,14 @@ class CollectionSinglePage(QWidget):
                 self.layout.removeWidget(widget)
 
             self.item_list.remove(item)
+            print(f'{item.id=}')
+            self.item_service.founded_items_repository.delete(item_id=item.id)
             if self.single_item_page_list.get(item.addition_date):
                 self.single_item_page_list.pop(item.addition_date)
             self.show_items()
+
+    def set_item_list(self, item_list: list[CreateFinalItemDto]) -> None:
+        self.item_list = item_list
 
 
 

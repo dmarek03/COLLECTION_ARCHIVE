@@ -1,15 +1,17 @@
-import sys
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QColor
 from PyQt6.QtWidgets import *
-from collection_page import CollectionPage
-from add_item_page import AddItemPage
+from PyQt6.QtGui import QFont, QColor
+from app.ui.collection_page import CollectionPage
+from app.ui.add_item_page import AddItemPage
+from app.ui.settings_page import SettingPage
 from app.utilities.button_style import main_button_style
-
+from app.service.final_item_service import FinalItemService
+import os
 
 class StartPage(QMainWindow):
-    def __init__(self):
+    def __init__(self, item_service: FinalItemService) -> None:
         super().__init__()
+        self.item_service = item_service
 
         self.setWindowTitle("Collection Archive")
         self.setGeometry(100, 100, 500, 500)
@@ -20,20 +22,23 @@ class StartPage(QMainWindow):
         self.main_widget = self.create_main_widget()
         self.stacked_widget.addWidget(self.main_widget)
 
-        my_collection_window = CollectionPage(self.stacked_widget, 5)
-        add_item_window = AddItemPage(self.stacked_widget)
+        my_collection_window = CollectionPage(self.item_service, self.stacked_widget)
+        add_item_window = AddItemPage(self.item_service, self.stacked_widget)
+        settings_page = SettingPage(self.stacked_widget)
 
         self.stacked_widget.addWidget(my_collection_window)
         self.stacked_widget.addWidget(add_item_window)
+        self.stacked_widget.addWidget(settings_page)
         self.stacked_widget.setStyleSheet("background-color: #daa520;")
 
+        image_path = "ui/main_background.png"
+
         self.main_widget.setStyleSheet(
-            """
-                        background-image: url('main_background.png');
-                        background-position: center;
-                        background-size: cover; /* Dopasowanie obrazu do rozmiaru okna */
-                """
+            f"background-image: url('{image_path}'); "
+            f"background-position: center; "
+            f"background-size: cover;"
         )
+
         self.show()
 
     def create_main_widget(self):
@@ -54,33 +59,36 @@ class StartPage(QMainWindow):
         label.setGraphicsEffect(glow_effect)
 
         my_collection_button = QPushButton("My Collection")
-        add_item_button = QPushButton("Add Item")
-
         my_collection_button.setMaximumWidth(200)
-        add_item_button.setMaximumWidth(200)
-
+        my_collection_button.setStyleSheet(main_button_style)
         my_collection_button.clicked.connect(self.go_to_my_collection_window)
+
+        add_item_button = QPushButton("Add Item")
+        add_item_button.setMaximumWidth(200)
+        add_item_button.setStyleSheet(main_button_style)
         add_item_button.clicked.connect(self.go_to_add_item_window)
 
-        my_collection_button.setStyleSheet(main_button_style)
+        settings_button = QPushButton('Settings')
+        settings_button.setMaximumWidth(200)
+        settings_button.setStyleSheet(main_button_style)
 
-        add_item_button.setStyleSheet(main_button_style)
+        settings_button.clicked.connect(self.go_to_settings_page)
 
-        layout.addWidget(label, 0, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(my_collection_button, 1, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(add_item_button, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(settings_button, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(add_item_button, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         return widget
 
-    def go_to_my_collection_window(self):
+    def go_to_my_collection_window(self) -> None:
         self.stacked_widget.setCurrentIndex(1)
 
-    def go_to_add_item_window(self):
+    def go_to_add_item_window(self) -> None:
         self.stacked_widget.setCurrentIndex(2)
 
+    def go_to_settings_page(self) -> None:
+        self.stacked_widget.setCurrentIndex(3)
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = StartPage()
-    window.show()
-    sys.exit(app.exec())
+
+
