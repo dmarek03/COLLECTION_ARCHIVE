@@ -1,22 +1,21 @@
+import math
 from typing import Any
-
 from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QFont, QIntValidator
 from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel, QPushButton, QStackedWidget, QLineEdit, QHBoxLayout, \
-    QComboBox, QVBoxLayout,  QDateEdit,  QFrame, QCheckBox
+    QComboBox, QVBoxLayout, QDateEdit, QFrame, QCheckBox, QMessageBox
 from app.utilities.button_style import main_button_style
-from collection_single_page import CollectionSinglePage
-from app.service.dto import CreateFinalItemDto
-from datetime import date
-from app.utilities.image_service import write_image_to_bytes
+from app.ui.collection_single_page import CollectionSinglePage
 from app.utilities.column_names_dict import item_attributes_to_db_column_mapping
+from app.service.final_item_service import FinalItemService
 
 
 class CollectionPage(QWidget):
-    def __init__(self, stacked_widget, page_count: int):
+    def __init__(self, item_service: FinalItemService, stacked_widget: QStackedWidget):
         super().__init__()
+        self.item_service = item_service
         self.stacked_widget = stacked_widget
-        self.page_count = page_count
+        self.page_count = 0
         self.current_page_idx = 0
         self.stacked_collection_page = QStackedWidget(self)
         self.layout = QGridLayout(self)
@@ -35,29 +34,12 @@ class CollectionPage(QWidget):
         label.setMaximumHeight(100)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        test_item = CreateFinalItemDto(
-            name="Prague groschen",
-            description="The most popular coin in medieval Europe allalalaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            first_image_data=write_image_to_bytes("lion_1.png"),
-            second_image_data=write_image_to_bytes("lion_1.png"),
-            quantity=1,
-            finding_date=date(2025, 1, 10),
-            finder_name="Dominik",
-            locality_name="Umieszcz",
-            location_name="Pilatka",
-            latitude=49.12455,
-            longitude=21.32450,
-            latitude_direction="N",
-            longitude_direction="E",
-            material_name="silver",
-            epoch_name="The Middle Ages",
-            year=1345,
-        )
-
-        for i in range(self.page_count):
-            x = CollectionSinglePage(self.stacked_widget, i, [test_item] * 5 if i == 0 else [])
-            x.setParent(self)
-            self.stacked_collection_page.addWidget(x)
+        item_list = self.item_service.founded_items_repository.get_all_items_order_by(value=None, descending=False)
+        print(f'{item_list=}')
+        self.page_count = math.ceil(len(item_list) / 5)
+        for i in range(len(item_list)):
+            single_collection_page = CollectionSinglePage(self.item_service, self.stacked_widget, i, item_list[i*5:(i+1)*5])
+            self.stacked_collection_page.addWidget(single_collection_page)
 
         start_window_button = QPushButton("Back to Start Page")
         start_window_button.setMaximumWidth(200)
@@ -265,14 +247,21 @@ class CollectionPage(QWidget):
         if category_name == 'Material name':
             return [QCheckBox('silver'), QCheckBox('bronze'), QCheckBox('gold'), QCheckBox('copper')]
 
-    def get_filters_values(self) -> tuple[dict[str, Any], dict[str, tuple[Any, Any]]]:
-        single_value_filters = {}
-        range_filters = {}
+    @staticmethod
+    def reset_style(widget):
+
+        widget.setStyleSheet("")
+        widget.setPlaceholderText("")
+
+    def validate_filters(self) -> bool:
+        errors = []
+
+        def mark_invalid(widget, message):
+            widget.setStyleSheet("color: #ff0000; border: 1px solid red;")
+            widget.setPlaceholderText(message)
+            errors.append(message)
 
         i = 0
-        name = None  # Zmienna do przechowywania ostatniego QLabel
-        checkboxes = {}  # Przechowuje zaznaczone wartości dla każdego filtra
-
         while i < self.filter_bar_layout.count():
             item = self.filter_bar_layout.itemAt(i)
 
@@ -282,57 +271,117 @@ class CollectionPage(QWidget):
 
             widget = item.widget()
 
-            # Jeśli elementem jest QLabel → zapamiętujemy jego tekst jako nazwę filtra
-            if widget and isinstance(widget, QLabel):
-                name = widget.text()
+            if isinstance(widget, QLabel) and widget.text() in ['Quantity', 'Finding date', 'Year']:
+                r_min = self.filter_bar_layout.itemAt(
+                    i + 1).widget() if i + 1 < self.filter_bar_layout.count() else None
+                r_max = self.filter_bar_layout.itemAt(
+                    i + 2).widget() if i + 2 < self.filter_bar_layout.count() else None
 
-            # Jeśli widget jest QLineEdit i nie należy do zakresu → dodajemy do `single_value_filters`
-            elif widget and isinstance(widget, QLineEdit) and widget.text():
-                if widget.placeholderText() == 'from':
+                if r_min and r_max:
+
+                    if isinstance(r_min, QLineEdit):
+                        r_min.textChanged.connect(lambda _, w=r_min: self.reset_style(w))
+                        r_max.textChanged.connect(lambda _, w=r_max: self.reset_style(w))
+
+                        min_val = r_min.text()
+                        max_val = r_max.text()
+
+                        if max_val and not min_val:
+                            mark_invalid(r_min, f'Low {widget.text()} range limit is required')
+                        elif min_val and not max_val:
+                            mark_invalid(r_max, f'Upper {widget.text()} range limit is required')
+                        elif min_val and max_val:
+                            try:
+                                if int(min_val) > int(max_val):
+                                    r_min.setText('')
+                                    r_max.setText('')
+                                    mark_invalid(r_min, f'Range is incorrect')
+                                    mark_invalid(r_max, f'Range is incorrect')
+                            except ValueError:
+                                mark_invalid(r_min, f'Invalid number')
+                                mark_invalid(r_max, f'Invalid number')
+
+                    elif isinstance(r_min, QDateEdit):
+
+                        min_date = r_min.date().toString("yyyy-MM-dd")
+                        max_date = r_max.date().toString("yyyy-MM-dd")
+
+                        if min_date > max_date:
+                            QMessageBox.warning(
+                                self,
+                                "Incorrect finding date range",
+                                "Lower date should be earlier than upper one"
+                            )
+
+                            errors.append('Incorrect year range')
+
+                i += 2
+            i += 1
+
+        return not errors
+
+    def get_filters_values(self) -> tuple[dict[str, Any], dict[str, tuple[Any, Any]]]:
+        if self.validate_filters():
+            single_value_filters = {}
+            range_filters = {}
+
+            i = 0
+            name = None
+            checkboxes = {}
+
+            while i < self.filter_bar_layout.count():
+                item = self.filter_bar_layout.itemAt(i)
+
+                if item is None:
+                    i += 1
+                    continue
+
+                widget = item.widget()
+
+                if widget and isinstance(widget, QLabel):
+                    name = widget.text()
+
+                elif widget and isinstance(widget, QLineEdit) and widget.text():
+                    if name in ['Quantity', 'Year']:
+                        min_widget = widget
+                        max_widget = self.filter_bar_layout.itemAt(i + 1).widget()
+
+                        if max_widget and isinstance(max_widget, QLineEdit):
+                            min_value = min_widget.text()
+                            max_value = max_widget.text()
+                            if name:
+                                range_filters[item_attributes_to_db_column_mapping[name]] = (min_value, max_value)
+                            i += 1
+                    else:
+                        if name and widget.text():
+                            single_value_filters[item_attributes_to_db_column_mapping[name]] = [widget.text()]
+
+                elif widget and isinstance(widget, QDateEdit):
                     min_widget = widget
                     max_widget = self.filter_bar_layout.itemAt(i + 1).widget()
 
-                    if max_widget and isinstance(max_widget, QLineEdit) and max_widget.placeholderText() == 'to':
-                        min_value = min_widget.text()
-                        max_value = max_widget.text()
+                    if max_widget and isinstance(max_widget, QDateEdit):
+                        min_date = min_widget.date().toString("yyyy-MM-dd")
+                        max_date = max_widget.date().toString("yyyy-MM-dd")
                         if name:
-                            range_filters[item_attributes_to_db_column_mapping[name]] = (min_value, max_value)
-                        i += 1  # Pomijamy drugi widget
-                else:
-                    if name and widget.text():
-                        single_value_filters[item_attributes_to_db_column_mapping[name]] = [widget.text()]
+                            range_filters[item_attributes_to_db_column_mapping[name]] = (min_date, max_date)
+                        i += 1
+                elif isinstance(item, QHBoxLayout):
+                    for j in range(item.count()):
+                        sub_widget = item.itemAt(j).widget()
+                        if isinstance(sub_widget, QCheckBox) and sub_widget.isChecked():
+                            if name and name not in checkboxes:
+                                checkboxes[name] = []
+                            checkboxes[name].append(sub_widget.text())
 
-            # Obsługa QDateEdit w parach
-            elif widget and isinstance(widget, QDateEdit):
-                min_widget = widget
-                max_widget = self.filter_bar_layout.itemAt(i + 1).widget()
+                i += 1
+            for key, values in checkboxes.items():
+                single_value_filters[item_attributes_to_db_column_mapping[key]] = values
 
-                if max_widget and isinstance(max_widget, QDateEdit):
-                    min_date = min_widget.date().toString("yyyy-MM-dd")
-                    max_date = max_widget.date().toString("yyyy-MM-dd")
-                    if name:
-                        range_filters[item_attributes_to_db_column_mapping[name]] = (min_date, max_date)
-                    i += 1  # Pomijamy drugi widget
+            for key, values in single_value_filters.items():
+                single_value_filters[key] = tuple(values) if len(values) > 1 else f"('{values[0]}')"
 
-            # Jeśli elementem jest HBoxLayout → sprawdzamy, czy są w nim CheckBoxy
-            elif isinstance(item, QHBoxLayout):
-                for j in range(item.count()):
-                    sub_widget = item.itemAt(j).widget()
-                    if isinstance(sub_widget, QCheckBox) and sub_widget.isChecked():
-                        if name and name not in checkboxes:
-                            checkboxes[name] = []
-                        checkboxes[name].append(sub_widget.text())
+            print(f'{single_value_filters=}')
+            print(f'{range_filters=}')
 
-            i += 1  # Przejście do następnego widgetu
-
-        # Dodanie checkboxów do pojedynczych filtrów jako tuple
-        for key, values in checkboxes.items():
-            single_value_filters[item_attributes_to_db_column_mapping[key]] = values
-
-        for key, values in single_value_filters.items():
-            single_value_filters[key] = tuple(values) if len(values) > 1 else f"('{values[0]}')"
-
-        print(f'{single_value_filters=}')
-        print(f'{range_filters=}')
-
-        return single_value_filters, range_filters
+            return single_value_filters, range_filters
