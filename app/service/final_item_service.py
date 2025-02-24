@@ -5,14 +5,14 @@ from app.persistance.model import (
     Locality,
     Location,
     Material,
-    FoundedItems,
+    FoundedItem,
 )
 from app.persistance.repository.dating import DatingRepository
 from app.persistance.repository.finder import FinderRepository
 from app.persistance.repository.locality import LocalityRepository
 from app.persistance.repository.location import LocationRepository
 from app.persistance.repository.material import MaterialRepository
-from app.persistance.repository.founded_items import FoundedItemsRepository
+from app.persistance.repository.founded_items import FoundedItemRepository
 from app.service.dto import CreateFinalItemDto
 
 
@@ -23,7 +23,7 @@ class FinalItemService:
     locality_repository: LocalityRepository
     location_repository: LocationRepository
     material_repository: MaterialRepository
-    founded_items_repository: FoundedItemsRepository
+    founded_items_repository: FoundedItemRepository
 
     def add_final_item(self, create_final_item_dto: CreateFinalItemDto) -> int:
         finder_id = self.finder_repository.insert(
@@ -56,7 +56,7 @@ class FinalItemService:
         )
 
         return self.founded_items_repository.insert(
-            FoundedItems(
+            FoundedItem(
                 name=create_final_item_dto.name,
                 description=create_final_item_dto.description,
                 first_image_data=create_final_item_dto.first_image_data,
@@ -71,5 +71,97 @@ class FinalItemService:
             )
         )
 
-    def delete_final_item(self, item_id) -> int:
+    def update_final_item(self, old_item: CreateFinalItemDto, updated_item: CreateFinalItemDto) -> int:
+        print(f'{old_item.finder_name=}')
+
+        old_finder_id = self.finder_repository.find_item_id(Finder(name=old_item.finder_name))
+
+        finder_id = self.finder_repository.update(
+            old_item=Finder(name=old_item.finder_name),
+            updated_item=Finder(name=updated_item.finder_name)
+        )
+
+        old_dating_id = self.dating_repository.find_item_id(Dating(name=old_item.epoch_name, year=old_item.year))
+
+        dating_id = self.dating_repository.update(
+            old_item=Dating(name=old_item.epoch_name, year=old_item.year),
+            updated_item=Dating(name=updated_item.epoch_name, year=updated_item.year)
+        )
+
+        old_locality_id = self.locality_repository.find_item_id(item=Locality(name=old_item.locality_name))
+
+        locality_id = self.locality_repository.update(
+            old_item=Locality(name=old_item.locality_name),
+            updated_item=Locality(name=updated_item.locality_name)
+
+        )
+
+        old_location_id = self.location_repository.find_item_id(item=Location(
+                name=old_item.location_name,
+                latitude=old_item.latitude,
+                longitude=old_item.longitude,
+                latitude_direction=old_item.latitude_direction,
+                longitude_direction=old_item.longitude_direction,
+                locality_id=old_locality_id
+            ))
+
+        location_id = self.location_repository.update(
+            old_item=Location(
+                name=old_item.location_name,
+                latitude=old_item.latitude,
+                longitude=old_item.longitude,
+                latitude_direction=old_item.latitude_direction,
+                longitude_direction=old_item.longitude_direction,
+                locality_id=old_locality_id
+            ),
+            updated_item=Location(
+                name=updated_item.location_name,
+                latitude=updated_item.latitude,
+                longitude=updated_item.longitude,
+                latitude_direction=updated_item.latitude_direction,
+                longitude_direction=updated_item.longitude_direction,
+                locality_id=locality_id
+
+            )
+        )
+
+        old_material_id = self.material_repository.find_item_id(item=Material(name=old_item.material_name))
+
+        material_id = self.material_repository.update(
+            old_item=Material(name=old_item.material_name),
+            updated_item=Material(name=updated_item.material_name)
+        )
+
+        return self.founded_items_repository.update(
+            old_item=FoundedItem(
+                name=old_item.name,
+                description=old_item.description,
+                first_image_data=old_item.first_image_data,
+                second_image_data=old_item.second_image_data,
+                quantity=old_item.quantity,
+                finding_date=old_item.finding_date,
+                addition_date=old_item.addition_date,
+                finder_id=old_finder_id,
+                location_id=old_location_id,
+                dating_id=old_dating_id,
+                material_id=old_material_id,
+
+            ),
+            updated_item=FoundedItem(
+                name=updated_item.name,
+                description=updated_item.description,
+                first_image_data=updated_item.first_image_data,
+                second_image_data=updated_item.second_image_data,
+                quantity=updated_item.quantity,
+                finding_date=updated_item.finding_date,
+                addition_date=updated_item.addition_date,
+                finder_id=finder_id,
+                location_id=location_id,
+                dating_id=dating_id,
+                material_id=material_id,
+
+            )
+        )
+
+    def delete_final_item(self, item_id: int) -> int:
         return self.founded_items_repository.delete(item_id=item_id)
