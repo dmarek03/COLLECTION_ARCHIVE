@@ -1,7 +1,15 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPixmap, QFontMetrics
-from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSizePolicy, \
-    QTableWidgetItem, QTableWidget
+from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QFrame,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QTableWidgetItem,
+    QTableWidget,
+)
 from app.utilities.button_style import main_button_style
 
 
@@ -18,24 +26,32 @@ class ItemSinglePage(QWidget):
         first_image_label = QLabel()
         first_image_pixmap = QPixmap()
         first_image_pixmap.loadFromData(self.item.first_image_data)
-        first_image_label.setPixmap(first_image_pixmap.scaled(600, 600, Qt.AspectRatioMode.KeepAspectRatio))
+        first_image_label.setPixmap(
+            first_image_pixmap.scaled(600, 600, Qt.AspectRatioMode.KeepAspectRatio)
+        )
 
         first_image_frame = QFrame()
         first_image_frame.setFrameShape(QFrame.Shape.Box)
         first_image_frame.setLineWidth(2)
         first_image_layout = QVBoxLayout(first_image_frame)
-        first_image_layout.addWidget(first_image_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        first_image_layout.addWidget(
+            first_image_label, alignment=Qt.AlignmentFlag.AlignCenter
+        )
 
         second_image_label = QLabel()
         second_image_pixmap = QPixmap()
         second_image_pixmap.loadFromData(self.item.second_image_data)
-        second_image_label.setPixmap(second_image_pixmap.scaled(600, 600, Qt.AspectRatioMode.KeepAspectRatio))
+        second_image_label.setPixmap(
+            second_image_pixmap.scaled(600, 600, Qt.AspectRatioMode.KeepAspectRatio)
+        )
 
         second_image_frame = QFrame()
         second_image_frame.setFrameShape(QFrame.Shape.Box)
         second_image_frame.setLineWidth(2)
         second_image_layout = QVBoxLayout(second_image_frame)
-        second_image_layout.addWidget(second_image_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        second_image_layout.addWidget(
+            second_image_label, alignment=Qt.AlignmentFlag.AlignCenter
+        )
 
         image_layout = QHBoxLayout()
         image_layout.addWidget(first_image_frame)
@@ -51,9 +67,14 @@ class ItemSinglePage(QWidget):
             ("Date of finding", self.item.finding_date),
             ("Finder name", self.item.finder_name),
             ("Locality name", self.item.locality_name),
-            ("Location name", self.item.location_name if self.item.location_name else "Indefinite"),
-            ("Coordinates",
-             f"{self.item.latitude}°{self.item.latitude_direction}, {self.item.longitude}°{self.item.longitude_direction}"),
+            (
+                "Location name",
+                self.item.location_name if self.item.location_name else "Indefinite",
+            ),
+            (
+                "Coordinates",
+                f"{self.item.latitude}°{self.item.latitude_direction}, {self.item.longitude}°{self.item.longitude_direction}",
+            ),
             ("Material name", self.item.material_name),
             ("Epoch name", self.item.epoch_name),
             ("Year", self.item.year if self.item.year else "Indefinite"),
@@ -62,9 +83,15 @@ class ItemSinglePage(QWidget):
         table_widget = QTableWidget(len(table_data), 2)
         table_widget.verticalHeader().setVisible(False)
         table_widget.horizontalHeader().setVisible(False)
-        table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)  # Wyłącz edytowanie
-        table_widget.setSelectionMode(QTableWidget.SelectionMode.NoSelection)  # Wyłącz zaznaczanie
-        table_widget.setStyleSheet("QTableWidget { border: 2px solid black;gridline-color: black;  }")
+        table_widget.setEditTriggers(
+            QTableWidget.EditTrigger.NoEditTriggers
+        )
+        table_widget.setSelectionMode(
+            QTableWidget.SelectionMode.NoSelection
+        )
+        table_widget.setStyleSheet(
+            "QTableWidget { border: 2px solid black;gridline-color: black;  }"
+        )
 
         table_widget.setFixedWidth(369)
         table_widget.setFixedHeight(292)
@@ -80,7 +107,10 @@ class ItemSinglePage(QWidget):
             value_label = QLabel(str(value))
             value_label.setWordWrap(True)
             description_text = value_label.text()
-            wrapped_text = '\n'.join(description_text[i:i + 40] for i in range(0, len(description_text), 40))
+            wrapped_text = "\n".join(
+                description_text[i : i + 40]
+                for i in range(0, len(description_text), 40)
+            )
 
             value_item = QTableWidgetItem(wrapped_text)
             value_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
