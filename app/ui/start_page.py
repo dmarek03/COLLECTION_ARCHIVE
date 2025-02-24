@@ -6,7 +6,7 @@ from app.ui.add_item_page import AddItemPage
 from app.ui.settings_page import SettingPage
 from app.utilities.button_style import main_button_style
 from app.service.final_item_service import FinalItemService
-import os
+
 
 class StartPage(QMainWindow):
     def __init__(self, item_service: FinalItemService) -> None:
@@ -68,7 +68,7 @@ class StartPage(QMainWindow):
         add_item_button.setStyleSheet(main_button_style)
         add_item_button.clicked.connect(self.go_to_add_item_window)
 
-        settings_button = QPushButton('Settings')
+        settings_button = QPushButton("Settings")
         settings_button.setMaximumWidth(200)
         settings_button.setStyleSheet(main_button_style)
 
@@ -89,6 +89,3 @@ class StartPage(QMainWindow):
 
     def go_to_settings_page(self) -> None:
         self.stacked_widget.setCurrentIndex(3)
-
-
-
