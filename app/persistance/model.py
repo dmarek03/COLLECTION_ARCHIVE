@@ -10,7 +10,7 @@ class BaseTable(ABC):
 
 
 @dataclass
-class FoundedItems(BaseTable):
+class FoundedItem(BaseTable):
     description: str | None = None
     first_image_data: bytes | None = None
     second_image_data: bytes | None = None
