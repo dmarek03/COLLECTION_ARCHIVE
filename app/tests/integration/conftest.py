@@ -6,7 +6,7 @@ from app.persistance.repository.finder import FinderRepository
 from app.persistance.repository.locality import LocalityRepository
 from app.persistance.repository.location import LocationRepository
 from app.persistance.repository.material import MaterialRepository
-from app.persistance.repository.founded_items import FoundedItemsRepository
+from app.persistance.repository.founded_items import FoundedItemRepository
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +41,7 @@ def fake_material_repository(fake_connection):
 
 @pytest.fixture(scope="module")
 def fake_founded_item_repository(fake_connection):
-    return FoundedItemsRepository(connection_pool=fake_connection)
+    return FoundedItemRepository(connection_pool=fake_connection)
 
 
 @pytest.fixture(scope="module")
