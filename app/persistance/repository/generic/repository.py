@@ -72,16 +72,26 @@ class CrudRepository:
                 cursor.close()
                 connection.close()
 
-    def update(self, item_id: int, item: Any) -> int:
-        try:
-            sql = f"update {self._table_name()} set {self._column_names_and_values_for_update(item)} where id={item_id}"
+    def update(self, old_item: Any, updated_item: Any) -> int:
 
+        if equal_item_id := self.find_item_id(updated_item):
+            print(f"{equal_item_id=}")
+            return equal_item_id
+        try:
+
+            old_item_id = self.find_item_id(old_item)
+            print(f'{old_item_id=}')
+
+            print(f'{self._table_name()=}')
+            sql = f"update {self._table_name()} set {self._column_names_and_values_for_update(updated_item)} where id={old_item_id}"
+            print(f'{self._field_names()=}')
+            print(f'{sql=}')
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
                 cursor = connection.cursor()
                 cursor.execute(sql)
                 connection.commit()
-                return item_id
+                return old_item_id
         except Error as err:
             logging.error(err)
             connection.rollback()
