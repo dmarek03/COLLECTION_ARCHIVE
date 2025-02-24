@@ -1,6 +1,14 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPixmap
-from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QVBoxLayout, QHBoxLayout, QPushButton, QLayout, QMessageBox
+from PyQt6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QFrame,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QMessageBox,
+)
 from app.service.dto import CreateFinalItemDto
 from app.utilities.button_style import main_button_style
 from app.ui.item_single_page import ItemSinglePage
@@ -8,7 +16,13 @@ from app.service.final_item_service import FinalItemService
 
 
 class CollectionSinglePage(QWidget):
-    def __init__(self, item_service: FinalItemService, stacked_widget, page_idx: int, item_list: list[CreateFinalItemDto]):
+    def __init__(
+        self,
+        item_service: FinalItemService,
+        stacked_widget,
+        page_idx: int,
+        item_list: list[CreateFinalItemDto],
+    ):
         super().__init__()
         self.item_service = item_service
         self.stacked_widget = stacked_widget
@@ -25,7 +39,13 @@ class CollectionSinglePage(QWidget):
         self.show_items()
 
     def show_items(self) -> None:
+        while self.layout.count():
+            item = self.layout.takeAt(0)
+            if widget := item.widget():
+                widget.deleteLater()
+
         for item in self.item_list:
+
             item_frame = QFrame()
             item_frame.setFrameShape(QFrame.Shape.Box)
             item_frame.setLineWidth(2)
@@ -35,14 +55,16 @@ class CollectionSinglePage(QWidget):
             image_label = QLabel()
             pixmap = QPixmap()
             pixmap.loadFromData(item.first_image_data)
-            image_label.setPixmap(pixmap.scaled(160, 160, Qt.AspectRatioMode.KeepAspectRatio))
+            image_label.setPixmap(
+                pixmap.scaled(160, 160, Qt.AspectRatioMode.KeepAspectRatio)
+            )
             image_label.setMaximumWidth(160)
             image_label.setMaximumHeight(160)
-            item_layout.setSpacing(10)
+            item_layout.setSpacing(5)
             item_layout.addWidget(image_label)
 
             text_layout = QVBoxLayout()
-            text_layout.setSpacing(10)
+            text_layout.setSpacing(5)
 
             name_label = QLabel(f"<b>Item name:</b> {item.name}")
             name_label.setFont(QFont("Arial", 12))
@@ -57,15 +79,20 @@ class CollectionSinglePage(QWidget):
             text_layout.addWidget(finder_label)
             text_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-            view_detail_button = QPushButton('View detail')
+            view_detail_button = QPushButton("View detail")
             view_detail_button.setMaximumWidth(100)
             view_detail_button.setMaximumHeight(50)
-            view_detail_button.clicked.connect(lambda: self.view_detail(item))
+            view_detail_button.clicked.connect(lambda _, w=item: self.view_detail(w))
 
-            delete_button = QPushButton('Delete')
+            edit_button = QPushButton("Edit")
+            edit_button.setMaximumWidth(100)
+            edit_button.setMaximumHeight(50)
+            edit_button.clicked.connect(lambda _, w=item: self.edit_item(w))
+
+            delete_button = QPushButton("Delete")
             delete_button.setMaximumWidth(100)
             delete_button.setMaximumHeight(50)
-            delete_button.clicked.connect(lambda: self.delete_item(item))
+            delete_button.clicked.connect(lambda _, w=item: self.delete_item(w))
 
             vertical_line = QFrame()
             vertical_line.setFrameShape(QFrame.Shape.VLine)
@@ -75,6 +102,7 @@ class CollectionSinglePage(QWidget):
             item_layout.addWidget(vertical_line, Qt.AlignmentFlag.AlignLeft)
             item_layout.addLayout(text_layout)
             item_layout.addWidget(view_detail_button, Qt.AlignmentFlag.AlignRight)
+            item_layout.addWidget(edit_button, Qt.AlignmentFlag.AlignRight)
             item_layout.addWidget(delete_button, Qt.AlignmentFlag.AlignRight)
             item_frame.setLayout(item_layout)
 
@@ -87,22 +115,27 @@ class CollectionSinglePage(QWidget):
         self.layout.addWidget(label)
 
     def view_detail(self, item) -> None:
-        if not self.single_item_page_list.get(item.addition_date):
+        if not self.single_item_page_list.get(item.id):
             new_page = ItemSinglePage(item, self.stacked_widget)
-            self.single_item_page_list[item.addition_date] = new_page
+            self.single_item_page_list[item.id] = new_page
             self.stacked_widget.addWidget(new_page)
             self.stacked_widget.setCurrentWidget(new_page)
 
         else:
-            self.stacked_widget.setCurrentWidget(self.single_item_page_list[item.addition_date])
+            self.stacked_widget.setCurrentWidget(self.single_item_page_list[item.id])
 
-    # TODO think about better way to delete items, i.g adding special uuid to or something like that
+    def edit_item(self, item) -> None:
+        print(f'Editing: {item}')
+        add_item_page = self.stacked_widget.widget(2)
+        self.stacked_widget.setCurrentWidget(add_item_page)
+        add_item_page.go_to_edition_page(item)
+
     def delete_item(self, item) -> None:
 
         button = QMessageBox.question(
             self,
-            'Item delete confirmation',
-            f'Do you want to delete: <b>{item.name}<b>'
+            "Item delete confirmation",
+            f"Do you want to delete: <b>{item.name}<b>",
         )
 
         if button == QMessageBox.StandardButton.Yes:
@@ -112,14 +145,14 @@ class CollectionSinglePage(QWidget):
                 self.layout.removeWidget(widget)
 
             self.item_list.remove(item)
-            print(f'{item.id=}')
-            self.item_service.founded_items_repository.delete(item_id=item.id)
-            if self.single_item_page_list.get(item.addition_date):
-                self.single_item_page_list.pop(item.addition_date)
-            self.show_items()
+            self.item_service.delete_final_item(item_id=item.id)
+            if self.single_item_page_list.get(item.id):
+                widget_to_delete = self.single_item_page_list.pop(item.id)
+                self.stacked_widget.removeWidget(widget_to_delete)
+            collection_page = self.stacked_widget.widget(1)
+            collection_page.create_single_pages()
+            collection_page.init_filter_bar()
 
     def set_item_list(self, item_list: list[CreateFinalItemDto]) -> None:
         self.item_list = item_list
-
-
-
+        self.show_items()
