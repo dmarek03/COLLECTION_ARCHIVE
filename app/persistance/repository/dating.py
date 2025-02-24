@@ -35,9 +35,9 @@ class DatingRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    def get_all_epoch_name(self, descending: bool) -> list[str]:
+    def get_all_epoch_name(self, descending: bool = False) -> list[str]:
         try:
-            sql = f""" select name from datings order by name"""
+            sql = f""" select distinct name from datings order by name"""
             sql += " desc" if descending else ""
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
@@ -53,9 +53,9 @@ class DatingRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    def get_all_years(self, descending: bool) -> list[int]:
+    def get_all_years(self, descending: bool = False) -> list[int]:
         try:
-            sql = f" select year from datings order by year {'desc' if descending else ''}"
+            sql = f" select distinct year from datings order by year {'desc' if descending else ''}"
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():

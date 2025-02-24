@@ -34,7 +34,7 @@ class FinderRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    def get_all_finder_name(self, descending: bool) -> list[str]:
+    def get_all_finder_name(self, descending: bool = False) -> list[str]:
 
         try:
             sql = f" select name from finders order by name {'desc' if descending else ''}"

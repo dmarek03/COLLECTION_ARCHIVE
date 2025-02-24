@@ -33,10 +33,10 @@ class LocalityRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    def get_all_locality_name(self, descending: bool) -> list[str]:
+    def get_all_locality_name(self, descending: bool = False) -> list[str]:
 
         try:
-            sql = f" select name from localities order by name {'desc' if descending else ''}"
+            sql = f" select distinct name from localities order by name {'desc' if descending else ''}"
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():

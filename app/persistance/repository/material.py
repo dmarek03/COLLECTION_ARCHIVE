@@ -34,7 +34,7 @@ class MaterialRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    def get_all_material_name(self, descending: bool) -> list[str]:
+    def get_all_material_name(self, descending: bool = False) -> list[str]:
 
         try:
             sql = f" select name from materials order by name {'desc' if descending else ''}"

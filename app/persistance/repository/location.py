@@ -40,10 +40,10 @@ class LocationRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    def get_all_location_name(self, descending: bool) -> list[str]:
+    def get_all_location_name(self, descending: bool = False) -> list[str]:
 
         try:
-            sql = f" select name from locations order by name {'desc' if descending else ''}"
+            sql = f" select distinct name from locations order by name {'desc' if descending else ''}"
 
             connection = self.connection_pool.get_connection()
             if connection.is_connected():
@@ -59,10 +59,11 @@ class LocationRepository(CrudRepository):
                 cursor.close()
                 connection.close()
 
-    # TODO think about creating in model coordinates class to represent location cords
-    def get_all_location_coordinates(self, descending: bool) -> list[tuple[str, str]]:
+    def get_all_location_coordinates(
+        self, descending: bool = False
+    ) -> list[tuple[str, str]]:
         try:
-            sql = f" select  latitude, longitude, latitude_direction, longitude_direction from locations order by name"
+            sql = f" select distinct latitude, longitude, latitude_direction, longitude_direction from locations order by name"
             sql += " desc" if descending else ""
 
             connection = self.connection_pool.get_connection()

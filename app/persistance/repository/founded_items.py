@@ -3,15 +3,15 @@ from datetime import date
 from typing import Any
 
 from .generic.repository import CrudRepository
-from app.persistance.model import FoundedItems
+from app.persistance.model import FoundedItem
 from app.service.dto import CreateFinalItemDto
 from mysql.connector.pooling import MySQLConnectionPool, Error
 
 
-class FoundedItemsRepository(CrudRepository):
+class FoundedItemRepository(CrudRepository):
 
     def __init__(self, connection_pool: MySQLConnectionPool):
-        super().__init__(connection_pool, FoundedItems)
+        super().__init__(connection_pool, FoundedItem)
         self._create_table()
         self.select_all_items_info_sql_statement = f"""
                        select f.id, f.name, f.description, f.first_image_data,f.second_image_data,f.quantity, 
@@ -85,7 +85,7 @@ class FoundedItemsRepository(CrudRepository):
                 connection.close()
 
     def fetch_items_order_by(
-            self, column_name: str | None = None, descending: bool = False
+        self, column_name: str | None = None, descending: bool = False
     ) -> list[CreateFinalItemDto]:
 
         try:
@@ -109,11 +109,15 @@ class FoundedItemsRepository(CrudRepository):
                 connection.close()
 
     def fetch_items_with_criteria(
-            self, equals_criteria: dict[str, Any], range_criteria: dict[str, tuple[Any, Any]],
-            order_column: str, descending: bool = False) -> list[CreateFinalItemDto]:
+        self,
+        equals_criteria: dict[str, Any],
+        range_criteria: dict[str, tuple[Any, Any]],
+        order_column: str,
+        descending: bool = False,
+    ) -> list[CreateFinalItemDto]:
         try:
             connection = self.connection_pool.get_connection()
-            sql = self.select_all_items_info_sql_statement + ' where '
+            sql = self.select_all_items_info_sql_statement + " where "
             for key, values in equals_criteria.items():
                 sql += f"{key} in {values} and "
 
@@ -122,12 +126,11 @@ class FoundedItemsRepository(CrudRepository):
 
             sql = sql[:-4]
             sql += f"order by {order_column} {'desc' if descending else ''}"
-            print(f'{sql=}')
+            print(f"{sql=}")
             if connection.is_connected():
                 cursor = connection.cursor()
                 cursor.execute(sql)
                 return [CreateFinalItemDto(*row) for row in cursor.fetchall()]
-
 
         except Error as err:
             logging.error(err)
@@ -138,14 +141,20 @@ class FoundedItemsRepository(CrudRepository):
                 connection.close()
 
     def fetch_items_where_value_between(
-            self, column_name: str, range_min: int | str, range_max: int | str, descending: bool = False
+        self,
+        column_name: str,
+        range_min: int | str,
+        range_max: int | str,
+        descending: bool = False,
     ) -> list[CreateFinalItemDto]:
 
         try:
             connection = self.connection_pool.get_connection()
             sql = self.select_all_items_info_sql_statement
-            sql += (f"where {column_name} between '{range_min}' and '{range_max}'"
-                    f" order by {column_name} {'desc' if descending else ''}")
+            sql += (
+                f"where {column_name} between '{range_min}' and '{range_max}'"
+                f" order by {column_name} {'desc' if descending else ''}"
+            )
 
             print(sql)
 
@@ -163,14 +172,18 @@ class FoundedItemsRepository(CrudRepository):
                 connection.close()
 
     def fetch_items_where_value_equals(
-            self, column_name: str, variable: str | int | date, descending: bool = False
+        self,
+        column_name: str,
+        variable: str | int | date,
+        column_to_order: str,
+        descending: bool = False,
     ) -> list[CreateFinalItemDto]:
 
         try:
             connection = self.connection_pool.get_connection()
             sql = self.select_all_items_info_sql_statement
-            sql += f"where {column_name} = '{variable}' order by {column_name} {'desc' if descending else ''}"
-
+            sql += f"where {column_name} = '{variable}' order by {column_to_order} {'desc' if descending else ''}"
+            print(f'{sql=}')
             if connection.is_connected():
                 cursor = connection.cursor()
                 cursor.execute(sql)
@@ -185,144 +198,178 @@ class FoundedItemsRepository(CrudRepository):
                 connection.close()
 
     def get_all_items_order_by(
-            self, value: str | None, descending: bool
+        self, value: str | None, descending: bool = False
     ) -> list[CreateFinalItemDto]:
         match value:
-            case "item name":
+            case "Item name":
                 return self.fetch_items_order_by(
                     column_name="f.name", descending=descending
                 )
 
-            case "finding_date":
+            case "Finding_date":
                 return self.fetch_items_order_by(
                     column_name="f.finding_date", descending=descending
                 )
 
-            case "addition date":
+            case "Addition date":
                 return self.fetch_items_order_by(
                     column_name="f.addition_date", descending=descending
                 )
 
-            case "quantity":
+            case "Quantity":
                 return self.fetch_items_order_by(
                     column_name="f.addition_date", descending=descending
                 )
 
-            case "finder name":
+            case "Finder name":
                 return self.fetch_items_order_by(
                     column_name="fd.name", descending=descending
                 )
 
-            case "locality name":
+            case "Locality name":
                 return self.fetch_items_order_by(
                     column_name="l.name", descending=descending
                 )
 
-            case "location name":
+            case "Location name":
                 return self.fetch_items_order_by(
                     column_name="ll.name", descending=descending
                 )
 
-            case "material name":
+            case "Material name":
                 return self.fetch_items_order_by(
                     column_name="m.name", descending=descending
                 )
 
-            case "epoch name":
+            case "Epoch name":
                 return self.fetch_items_order_by(
                     column_name="d.name", descending=descending
                 )
 
-            case "year":
+            case "Year":
                 return self.fetch_items_order_by(
-                    column_name="year", descending=descending
+                    column_name="d.year", descending=descending
                 )
 
             case _:
-                return self.fetch_items_order_by()
+                return self.fetch_items_order_by(
+                    column_name="f.id", descending=descending
+                )
 
     def get_all_item_where_value_between(
-            self, value: str, range_min: int | str | date, range_max: int | str | date, descending: bool
+        self,
+        value: str,
+        range_min: int | str | date,
+        range_max: int | str | date,
+        descending: bool = False,
     ) -> list[CreateFinalItemDto]:
 
         match value:
-            case "quantity":
+            case "Quantity":
                 return self.fetch_items_where_value_between(
                     "f.quantity", range_min, range_max, descending
                 )
 
-            case "finding_date":
+            case "Finding_date":
                 return self.fetch_items_where_value_between(
                     "f.finding_date", range_min, range_max, descending
                 )
 
-            case "year":
+            case "Year":
                 return self.fetch_items_where_value_between(
                     "d.year", range_min, range_max, descending
                 )
 
-            case "latitude":
+            case "Latitude":
                 return self.fetch_items_where_value_between(
                     "ll.latitude", range_min, range_max, descending
                 )
 
-            case "longitude":
+            case "Longitude":
                 return self.fetch_items_where_value_between(
                     "ll.longitude", range_min, range_max, descending
                 )
 
     def get_all_item_where_value_equals(
-            self, value: str, variable: str | int | date, descending: bool
+        self,
+        value: str,
+        variable: str | int | date,
+        column_to_order: str,
+        descending: bool,
     ) -> list[CreateFinalItemDto]:
 
         match value:
-            case "item name":
+            case "Item name":
+                print(f'{variable=}')
                 return self.fetch_items_where_value_equals(
-                    column_name="f.id", variable=variable, descending=descending
+                    column_name="f.name",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
-            case "finder name":
+            case "Finder name":
                 return self.fetch_items_where_value_equals(
-                    column_name="fd.name", variable=variable, descending=descending
+                    column_name="fd.name",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
-            case "locality name":
+            case "Locality name":
                 return self.fetch_items_where_value_equals(
-                    column_name="l.name", variable=variable, descending=descending
+                    column_name="l.name",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
-            case "location name":
+            case "Location name":
                 return self.fetch_items_where_value_equals(
-                    column_name="ll.name", variable=variable, descending=descending
+                    column_name="ll.name",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
-            case "latitude direction":
+            case "Latitude direction":
                 return self.fetch_items_where_value_equals(
                     column_name="ll.latitude_direction",
                     variable=variable,
+                    column_to_order=column_to_order,
                     descending=descending,
                 )
 
-            case "longitude direction":
+            case "Longitude direction":
                 return self.fetch_items_where_value_equals(
                     column_name="ll.longitude_direction",
                     variable=variable,
+                    column_to_order=column_to_order,
                     descending=descending,
                 )
 
-            case "material name":
+            case "Material name":
                 return self.fetch_items_where_value_equals(
-                    column_name="m.name", variable=variable, descending=descending
+                    column_name="m.name",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
-            case "epoch name":
+            case "Epoch name":
                 return self.fetch_items_where_value_equals(
-                    column_name="d.name", variable=variable, descending=descending
+                    column_name="d.name",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
-            case "year":
+            case "Year":
                 return self.fetch_items_where_value_equals(
-                    column_name="d.year", variable=variable, descending=descending
+                    column_name="d.year",
+                    variable=variable,
+                    column_to_order=column_to_order,
+                    descending=descending,
                 )
 
     # def get_all_items_order_by_name(self, descending: bool) -> list[CreateFinalItemDto]:
