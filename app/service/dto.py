@@ -23,7 +23,6 @@ class CreateFinalItemDto:
     epoch_name: str | None = None
     year: int | str = None
 
-
     def __repr__(self):
         return f"""
                Name: {self.name}
