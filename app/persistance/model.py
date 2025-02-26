@@ -50,3 +50,8 @@ class Material(BaseTable):
 @dataclass
 class Dating(BaseTable):
     year: int | None = None
+
+
+@dataclass
+class WishItem(BaseTable):
+    image_data: bytes | None = None
