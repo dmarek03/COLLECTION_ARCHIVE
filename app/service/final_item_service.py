@@ -71,82 +71,36 @@ class FinalItemService:
             )
         )
 
-    def update_final_item(self, old_item: CreateFinalItemDto, updated_item: CreateFinalItemDto) -> int:
-        print(f'{old_item.finder_name=}')
-
-        old_finder_id = self.finder_repository.find_item_id(Finder(name=old_item.finder_name))
-
-        finder_id = self.finder_repository.update(
-            old_item=Finder(name=old_item.finder_name),
-            updated_item=Finder(name=updated_item.finder_name)
+    def update_final_item(self, old_item_id: int, updated_item: CreateFinalItemDto) -> int:
+        new_finder_id = self.finder_repository.find_or_create(
+            item=Finder(name=updated_item.finder_name)
         )
 
-        old_dating_id = self.dating_repository.find_item_id(Dating(name=old_item.epoch_name, year=old_item.year))
-
-        dating_id = self.dating_repository.update(
-            old_item=Dating(name=old_item.epoch_name, year=old_item.year),
-            updated_item=Dating(name=updated_item.epoch_name, year=updated_item.year)
+        new_dating_id = self.dating_repository.find_or_create(
+            item=Dating(name=updated_item.epoch_name, year=updated_item.year)
         )
 
-        old_locality_id = self.locality_repository.find_item_id(item=Locality(name=old_item.locality_name))
-
-        locality_id = self.locality_repository.update(
-            old_item=Locality(name=old_item.locality_name),
-            updated_item=Locality(name=updated_item.locality_name)
-
+        new_locality_id = self.locality_repository.find_or_create(
+            item=Locality(name=updated_item.locality_name)
         )
 
-        old_location_id = self.location_repository.find_item_id(item=Location(
-                name=old_item.location_name,
-                latitude=old_item.latitude,
-                longitude=old_item.longitude,
-                latitude_direction=old_item.latitude_direction,
-                longitude_direction=old_item.longitude_direction,
-                locality_id=old_locality_id
-            ))
-
-        location_id = self.location_repository.update(
-            old_item=Location(
-                name=old_item.location_name,
-                latitude=old_item.latitude,
-                longitude=old_item.longitude,
-                latitude_direction=old_item.latitude_direction,
-                longitude_direction=old_item.longitude_direction,
-                locality_id=old_locality_id
-            ),
-            updated_item=Location(
+        new_location_id = self.location_repository.find_or_create(
+            item=Location(
                 name=updated_item.location_name,
                 latitude=updated_item.latitude,
                 longitude=updated_item.longitude,
                 latitude_direction=updated_item.latitude_direction,
                 longitude_direction=updated_item.longitude_direction,
-                locality_id=locality_id
-
+                locality_id=new_locality_id
             )
         )
 
-        old_material_id = self.material_repository.find_item_id(item=Material(name=old_item.material_name))
-
-        material_id = self.material_repository.update(
-            old_item=Material(name=old_item.material_name),
-            updated_item=Material(name=updated_item.material_name)
+        new_material_id = self.material_repository.find_or_create(
+            item=Material(name=updated_item.material_name)
         )
 
         return self.founded_items_repository.update(
-            old_item=FoundedItem(
-                name=old_item.name,
-                description=old_item.description,
-                first_image_data=old_item.first_image_data,
-                second_image_data=old_item.second_image_data,
-                quantity=old_item.quantity,
-                finding_date=old_item.finding_date,
-                addition_date=old_item.addition_date,
-                finder_id=old_finder_id,
-                location_id=old_location_id,
-                dating_id=old_dating_id,
-                material_id=old_material_id,
-
-            ),
+            old_item_id=old_item_id,
             updated_item=FoundedItem(
                 name=updated_item.name,
                 description=updated_item.description,
@@ -155,11 +109,10 @@ class FinalItemService:
                 quantity=updated_item.quantity,
                 finding_date=updated_item.finding_date,
                 addition_date=updated_item.addition_date,
-                finder_id=finder_id,
-                location_id=location_id,
-                dating_id=dating_id,
-                material_id=material_id,
-
+                finder_id=new_finder_id,
+                location_id=new_location_id,
+                dating_id=new_dating_id,
+                material_id=new_material_id
             )
         )
 
