@@ -4,6 +4,8 @@ from PyQt6.QtGui import QFont, QColor
 from app.ui.collection_page import CollectionPage
 from app.ui.add_item_page import AddItemPage
 from app.ui.settings_page import SettingPage
+from app.ui.wishlist_page import WishListPage
+from app.ui.add_wishlist_items_page import AddWishlistItemsPage
 from app.utilities.button_style import main_button_style
 from app.service.final_item_service import FinalItemService
 
@@ -25,10 +27,14 @@ class StartPage(QMainWindow):
         my_collection_window = CollectionPage(self.item_service, self.stacked_widget)
         add_item_window = AddItemPage(self.item_service, self.stacked_widget)
         settings_page = SettingPage(self.stacked_widget)
+        wishlist_page = WishListPage(self.stacked_widget)
+        add_wishlist_page = AddWishlistItemsPage(self.stacked_widget)
 
         self.stacked_widget.addWidget(my_collection_window)
         self.stacked_widget.addWidget(add_item_window)
         self.stacked_widget.addWidget(settings_page)
+        self.stacked_widget.addWidget(wishlist_page)
+        self.stacked_widget.addWidget(add_wishlist_page)
         self.stacked_widget.setStyleSheet("background-color: #daa520;")
 
         image_path = "ui/main_background.png"
@@ -71,13 +77,18 @@ class StartPage(QMainWindow):
         settings_button = QPushButton("Settings")
         settings_button.setMaximumWidth(200)
         settings_button.setStyleSheet(main_button_style)
-
         settings_button.clicked.connect(self.go_to_settings_page)
 
-        layout.addWidget(label, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
+        wishlist_button = QPushButton('My Wishlist')
+        wishlist_button.setMaximumWidth(200)
+        wishlist_button.setStyleSheet(main_button_style)
+        wishlist_button.clicked.connect(self.go_to_wishlist_page)
+
+        layout.addWidget(label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(my_collection_button, 1, 0, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(settings_button, 1, 1, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(add_item_button, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(wishlist_button, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(add_item_button, 1, 3, Qt.AlignmentFlag.AlignCenter)
 
         return widget
 
@@ -89,3 +100,6 @@ class StartPage(QMainWindow):
 
     def go_to_settings_page(self) -> None:
         self.stacked_widget.setCurrentIndex(3)
+
+    def go_to_wishlist_page(self) -> None:
+        self.stacked_widget.setCurrentIndex(4)
