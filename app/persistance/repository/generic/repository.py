@@ -72,14 +72,19 @@ class CrudRepository:
                 cursor.close()
                 connection.close()
 
-    def update(self, old_item: Any, updated_item: Any) -> int:
+    def find_or_create(self, item: Any) -> int:
+        if equal_item_id := self.find_item_id(item):
+            return equal_item_id
+
+        return self.insert(item)
+
+    def update(self, old_item_id: Any, updated_item: Any) -> int:
 
         if equal_item_id := self.find_item_id(updated_item):
             print(f"{equal_item_id=}")
             return equal_item_id
         try:
 
-            old_item_id = self.find_item_id(old_item)
             print(f'{old_item_id=}')
 
             print(f'{self._table_name()=}')
