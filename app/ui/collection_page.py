@@ -104,30 +104,36 @@ class CollectionPage(QWidget):
             )
 
         new_page_count = math.ceil(len(item_list) / self.number_of_items_on_page)
-        for i in range(self.stacked_collection_page.count()):
+
+        for i in reversed(range(self.stacked_collection_page.count())):
             single_page = self.stacked_collection_page.widget(i)
 
             if i < new_page_count:
+
                 item_per_page = item_list[i * self.number_of_items_on_page: (i + 1) * self.number_of_items_on_page]
                 single_page.set_item_list(item_per_page)
+                print(f'{item_per_page=}')
 
             else:
+
                 self.stacked_collection_page.removeWidget(single_page)
+                single_page.setParent(None)
                 single_page.deleteLater()
 
         for i in range(self.stacked_collection_page.count(), new_page_count):
-
             single_collection_page = CollectionSinglePage(
                 item_service=self.item_service,
                 stacked_widget=self.stacked_widget,
                 page_idx=i,
-                item_list= item_list[i * self.number_of_items_on_page: (i + 1) * self.number_of_items_on_page]
+                item_list=item_list[i * self.number_of_items_on_page: (i + 1) * self.number_of_items_on_page]
             )
             single_collection_page.setParent(self)
             self.stacked_collection_page.addWidget(single_collection_page)
 
         self.page_count = new_page_count
-        self.current_page_idx = min(self.current_page_idx, self.page_count - 1)
+
+        self.current_page_idx = min(self.current_page_idx, max(self.page_count - 1, 0))
+
         self.stacked_collection_page.setCurrentIndex(self.current_page_idx)
         self.update()
 
@@ -220,7 +226,7 @@ class CollectionPage(QWidget):
         finding_date_label.setFont(QFont("Cambria Math", 12, QFont.Weight.Bold))
 
         finding_date_min = QDateEdit()
-        finding_date_min.setDate(QDate.currentDate())
+        finding_date_min.setDate(QDate(2019, 6, 1))
         finding_date_min.setCalendarPopup(True)
         finding_date_min.setMaximumWidth(250)
 
@@ -328,25 +334,30 @@ class CollectionPage(QWidget):
 
     def filter(self) -> None:
 
-        equals_criteria, range_criteria = self.get_filters_values()
-        item_name = self.input_search.text()
-        sorting_column_name = item_attributes_to_db_column_mapping[
-            self.sort_dropdown.currentText()
-        ]
-        sorting_order = self.sorting_order.currentData()
+        if self.validate_filters():
 
-        if item_name:
-            equals_criteria[item_attributes_to_db_column_mapping['Name']] = f"('{item_name}')"
+            equals_criteria, range_criteria = self.get_filters_values()
+            item_name = self.input_search.text()
+            sorting_column_name = item_attributes_to_db_column_mapping[
+                self.sort_dropdown.currentText()
+            ]
+            sorting_order = self.sorting_order.currentData()
 
-        founded_items = self.item_service.founded_items_repository.fetch_items_with_criteria(
-            equals_criteria=equals_criteria,
-            range_criteria=range_criteria,
-            order_column=sorting_column_name,
-            descending=sorting_order
-        )
-        self.create_single_pages(item_list=founded_items, is_searching=True)
+            if item_name:
+                equals_criteria[item_attributes_to_db_column_mapping['Name']] = f"('{item_name}')"
+
+            founded_items = self.item_service.founded_items_repository.fetch_items_with_criteria(
+                equals_criteria=equals_criteria,
+                range_criteria=range_criteria,
+                order_column=sorting_column_name,
+                descending=sorting_order
+            )
+            self.create_single_pages(item_list=founded_items, is_searching=True)
 
     def go_to_next_page(self):
+        print('going to next page')
+        print(f'{self.current_page_idx=}')
+        print(f'{self.page_count=}')
         if self.current_page_idx < self.page_count - 1:
             self.current_page_idx += 1
             self.stacked_collection_page.setCurrentIndex(self.current_page_idx)
@@ -509,72 +520,72 @@ class CollectionPage(QWidget):
         return not errors
 
     def get_filters_values(self) -> tuple[dict[str, Any], dict[str, tuple[Any, Any]]]:
-        if self.validate_filters():
-            single_value_filters = {}
-            range_filters = {}
 
-            i = 0
-            name = None
-            checkboxes = {}
+        single_value_filters = {}
+        range_filters = {}
 
-            while i < self.filter_bar_layout.count():
-                item = self.filter_bar_layout.itemAt(i)
+        i = 0
+        name = None
+        checkboxes = {}
 
-                if item is None:
-                    i += 1
-                    continue
+        while i < self.filter_bar_layout.count():
+            item = self.filter_bar_layout.itemAt(i)
 
-                widget = item.widget()
+            if item is None:
+                i += 1
+                continue
 
-                if widget and isinstance(widget, QLabel):
-                    name = widget.text()
+            widget = item.widget()
 
-                elif widget and isinstance(widget, QLineEdit) and widget.text():
-                    if name in ["Quantity", "Year"]:
-                        min_widget = widget
-                        max_widget = self.filter_bar_layout.itemAt(i + 1).widget()
+            if widget and isinstance(widget, QLabel):
+                name = widget.text()
 
-                        if max_widget and isinstance(max_widget, QLineEdit):
-                            min_value = min_widget.text()
-                            max_value = max_widget.text()
-                            if name:
-                                range_filters[
-                                    item_attributes_to_db_column_mapping[name]
-                                ] = (min_value, max_value)
-                            i += 1
-                    else:
-                        if name and widget.text():
-                            single_value_filters[
-                                item_attributes_to_db_column_mapping[name]
-                            ] = [widget.text()]
-
-                elif widget and isinstance(widget, QDateEdit):
+            elif widget and isinstance(widget, QLineEdit) and widget.text():
+                if name in ["Quantity", "Year"]:
                     min_widget = widget
                     max_widget = self.filter_bar_layout.itemAt(i + 1).widget()
 
-                    if max_widget and isinstance(max_widget, QDateEdit):
-                        min_date = min_widget.date().toString("yyyy-MM-dd")
-                        max_date = max_widget.date().toString("yyyy-MM-dd")
+                    if max_widget and isinstance(max_widget, QLineEdit):
+                        min_value = min_widget.text()
+                        max_value = max_widget.text()
                         if name:
                             range_filters[
                                 item_attributes_to_db_column_mapping[name]
-                            ] = (min_date, max_date)
+                            ] = (min_value, max_value)
                         i += 1
-                elif isinstance(item, QHBoxLayout):
-                    for j in range(item.count()):
-                        sub_widget = item.itemAt(j).widget()
-                        if isinstance(sub_widget, QCheckBox) and sub_widget.isChecked():
-                            if name and name not in checkboxes:
-                                checkboxes[name] = []
-                            checkboxes[name].append(sub_widget.text())
+                else:
+                    if name and widget.text():
+                        single_value_filters[
+                            item_attributes_to_db_column_mapping[name]
+                        ] = [widget.text()]
 
-                i += 1
-            for key, values in checkboxes.items():
-                single_value_filters[item_attributes_to_db_column_mapping[key]] = values
+            elif widget and isinstance(widget, QDateEdit):
+                min_widget = widget
+                max_widget = self.filter_bar_layout.itemAt(i + 1).widget()
 
-            for key, values in single_value_filters.items():
-                single_value_filters[key] = (
-                    tuple(values) if len(values) > 1 else f"('{values[0]}')"
-                )
+                if max_widget and isinstance(max_widget, QDateEdit):
+                    min_date = min_widget.date().toString("yyyy-MM-dd")
+                    max_date = max_widget.date().toString("yyyy-MM-dd")
+                    if name:
+                        range_filters[
+                            item_attributes_to_db_column_mapping[name]
+                        ] = (min_date, max_date)
+                    i += 1
+            elif isinstance(item, QHBoxLayout):
+                for j in range(item.count()):
+                    sub_widget = item.itemAt(j).widget()
+                    if isinstance(sub_widget, QCheckBox) and sub_widget.isChecked():
+                        if name and name not in checkboxes:
+                            checkboxes[name] = []
+                        checkboxes[name].append(sub_widget.text())
 
-            return single_value_filters, range_filters
+            i += 1
+        for key, values in checkboxes.items():
+            single_value_filters[item_attributes_to_db_column_mapping[key]] = values
+
+        for key, values in single_value_filters.items():
+            single_value_filters[key] = (
+                tuple(values) if len(values) > 1 else f"('{values[0]}')"
+            )
+
+        return single_value_filters, range_filters
