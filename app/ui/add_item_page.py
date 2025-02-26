@@ -2,7 +2,7 @@ from app.ui.image_dropout import PhotoDropout
 from app.service.dto import CreateFinalItemDto
 from PyQt6.QtCore import Qt, QRegularExpression, QDate
 from app.utilities.button_style import main_button_style
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
+from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator, QPixmap
 from PyQt6.QtWidgets import (
     QWidget,
     QGridLayout,
@@ -193,10 +193,17 @@ class AddItemPage(QWidget):
         self.year.clear()
 
     def set_fields(self, item: CreateFinalItemDto) -> None:
+
+        pixmap1 = QPixmap()
+        pixmap1.loadFromData(item.first_image_data)
+
+        pixmap2 = QPixmap()
+        pixmap2.loadFromData(item.second_image_data)
+
         self.item_name.setText(item.name)
         self.description.setText(item.description)
-        self.first_image.clear()
-        self.second_image.clear()
+        self.first_image.photo.setPixmap(pixmap1)
+        self.second_image.photo.setPixmap(pixmap2)
         self.finding_date.setDate(item.finding_date)
         self.quantity.setText(str(item.quantity))
         self.finder_name.setText(item.finder_name)
@@ -204,11 +211,11 @@ class AddItemPage(QWidget):
         self.location_name.setText(item.location_name)
         self.latitude.setText(str(item.latitude))
         self.longitude.setText(str(item.longitude))
-        self.latitude_direction.setCurrentIndex(0)
-        self.longitude_direction.setCurrentIndex(0)
+        self.latitude_direction.setCurrentText(item.latitude_direction)
+        self.longitude_direction.setCurrentText(item.longitude_direction)
         self.material_name.setText(item.material_name)
         self.epoch_name.setText(item.epoch_name)
-        self.year.setText(str(item.year))
+        self.year.setText(str(item.year)) if item.year else ''
 
     def setup_signals(self):
 
@@ -338,7 +345,6 @@ class AddItemPage(QWidget):
         self.save_button.deleteLater()
 
         self.create_save_updated_button(item)
-
         self.set_fields(item)
 
     def update_item(self, item: CreateFinalItemDto) -> None:
@@ -347,7 +353,8 @@ class AddItemPage(QWidget):
 
             updated_item = self.create_item_from_data()
             try:
-                self.item_service.update_final_item(old_item=item, updated_item=updated_item)
+                print(f'Add item page :{item.id=}')
+                self.item_service.update_final_item(old_item_id=item.id, updated_item=updated_item)
 
             except Error as err:
                 QMessageBox.warning(self, 'Submission incorrect', err.msg)
@@ -356,6 +363,10 @@ class AddItemPage(QWidget):
                 QMessageBox.information(
                     self, "Submission correct", "Item updated correctly"
                 )
+                collection_page = self.stacked_widget.widget(1)
+                collection_page.create_single_pages()
+                collection_page.init_filter_bar()
+
                 collection_page = self.stacked_widget.widget(1)
                 collection_page.create_single_pages()
                 collection_page.init_filter_bar()
@@ -381,9 +392,6 @@ class AddItemPage(QWidget):
                 QMessageBox.information(
                     self, "Submission correct", "Item saved correctly"
                 )
-                collection_page = self.stacked_widget.widget(1)
-                collection_page.create_single_pages()
-                collection_page.init_filter_bar()
                 self.reset_fields()
 
     def go_to_start_window(self):
