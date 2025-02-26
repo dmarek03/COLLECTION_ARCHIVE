@@ -44,7 +44,9 @@ class PhotoDropout(QWidget):
         grid.addWidget(btn, 0, 0, Qt.AlignmentFlag.AlignHCenter)
         grid.addWidget(self.photo, 1, 0)
         self.setAcceptDrops(True)
-        self.resize(300, 200)
+        self.width = 300
+        self.height = 300
+        self.resize(self.width, self.height)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasImage:
@@ -77,8 +79,8 @@ class PhotoDropout(QWidget):
                 return
 
         pixmap = QPixmap(filename)
-        min_size = QSize(200, 200)
-        max_size = QSize(400, 400)
+        min_size = QSize(self.width//2, self.height//2)
+        max_size = QSize(self.width, self.height)
 
         scaled_pixmap = pixmap.scaled(
             max_size,
@@ -114,3 +116,7 @@ class PhotoDropout(QWidget):
             buffer.open(QBuffer.OpenModeFlag.WriteOnly)
             image.save(buffer, format="JPEG")
             return byte_array.data()
+
+    def self_set_size(self, w_size: int, h_size: int) -> None:
+        self.width = w_size
+        self.height = h_size
