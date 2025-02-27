@@ -129,6 +129,8 @@ class CollectionSinglePage(QWidget):
         add_item_page = self.stacked_widget.widget(2)
         self.stacked_widget.setCurrentWidget(add_item_page)
         add_item_page.go_to_edition_page(item)
+        if self.single_item_page_list.get(item.id):
+            self.single_item_page_list.pop(item.id)
 
     def delete_item(self, item) -> None:
 
