@@ -80,7 +80,7 @@ class AddItemPage(QWidget):
         self.quantity.setValidator(QIntValidator(1, 10000))
         self.year.setValidator(QIntValidator(0, 2100))
 
-        latitude_longitude_regex = QRegularExpression(r"^([0-9]{1, 3})(\.\d{1,2})?$")
+        latitude_longitude_regex = QRegularExpression(r'^([0-9]{1,3})(\.\d{6})?$')
         self.latitude.setValidator(
             QRegularExpressionValidator(latitude_longitude_regex, self)
         )
@@ -340,9 +340,7 @@ class AddItemPage(QWidget):
         self.layout.addWidget(self.save_updated_button, 9, 0, 1, 8, Qt.AlignmentFlag.AlignCenter)
 
     def go_to_edition_page(self, item: CreateFinalItemDto) -> None:
-
-        self.layout.removeWidget(self.save_button)
-        self.save_button.deleteLater()
+        self.save_button.setVisible(False)
 
         self.create_save_updated_button(item)
         self.set_fields(item)
@@ -363,18 +361,14 @@ class AddItemPage(QWidget):
                 QMessageBox.information(
                     self, "Submission correct", "Item updated correctly"
                 )
-                collection_page = self.stacked_widget.widget(1)
-                collection_page.create_single_pages()
-                collection_page.init_filter_bar()
 
                 collection_page = self.stacked_widget.widget(1)
                 collection_page.create_single_pages()
                 collection_page.init_filter_bar()
 
                 self.reset_fields()
-                self.layout.removeWidget(self.save_updated_button)
-                self.save_updated_button.deleteLater()
-                self.create_save_button()
+                self.save_button.setVisible(True)
+                self.save_updated_button.setVisible(False)
 
     def save_item(self):
 
@@ -393,6 +387,9 @@ class AddItemPage(QWidget):
                     self, "Submission correct", "Item saved correctly"
                 )
                 self.reset_fields()
+                collection_page = self.stacked_widget.widget(1)
+                collection_page.create_single_pages()
+                collection_page.init_filter_bar()
 
     def go_to_start_window(self):
         self.stacked_widget.setCurrentIndex(0)
