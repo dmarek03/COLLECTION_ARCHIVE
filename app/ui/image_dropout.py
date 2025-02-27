@@ -117,6 +117,6 @@ class PhotoDropout(QWidget):
             image.save(buffer, format="JPEG")
             return byte_array.data()
 
-    def self_set_size(self, w_size: int, h_size: int) -> None:
+    def set_size(self, w_size: int, h_size: int) -> None:
         self.width = w_size
         self.height = h_size
