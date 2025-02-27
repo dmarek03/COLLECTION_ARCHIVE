@@ -59,6 +59,9 @@ class ItemSinglePage(QWidget):
         image_layout.setSpacing(20)
         image_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        lat_deg, lat_min, lat_sec = self.item.coordinates_to_dms(value=self.item.latitude)
+        log_deg, log_min, log_sec = self.item.coordinates_to_dms(value=self.item.longitude)
+
         table_data = [
             ("Item name", self.item.name),
             ("Description", self.item.description),
@@ -67,13 +70,10 @@ class ItemSinglePage(QWidget):
             ("Date of finding", self.item.finding_date),
             ("Finder name", self.item.finder_name),
             ("Locality name", self.item.locality_name),
-            (
-                "Location name",
-                self.item.location_name if self.item.location_name else "Indefinite",
-            ),
+            ("Location name", self.item.location_name if self.item.location_name else "Indefinite"),
             (
                 "Coordinates",
-                f"{self.item.latitude}°{self.item.latitude_direction}, {self.item.longitude}°{self.item.longitude_direction}",
+                f"{lat_deg}°{lat_min}′{lat_sec:.2f}″{self.item.latitude_direction},{log_deg}°{log_min}′{log_sec:.2f}″{self.item.longitude_direction}"
             ),
             ("Material name", self.item.material_name),
             ("Epoch name", self.item.epoch_name),
@@ -93,10 +93,7 @@ class ItemSinglePage(QWidget):
             "QTableWidget { border: 2px solid black;gridline-color: black;  }"
         )
 
-        table_widget.setFixedWidth(369)
-        table_widget.setFixedHeight(292)
-
-        font_bold = QFont("Cambria Math", 12, QFont.Weight.DemiBold)
+        font_bold = QFont("Cambria Math", 13, QFont.Weight.DemiBold)
 
         for row, (field, value) in enumerate(table_data):
             field_item = QTableWidgetItem(field)
@@ -108,8 +105,8 @@ class ItemSinglePage(QWidget):
             value_label.setWordWrap(True)
             description_text = value_label.text()
             wrapped_text = "\n".join(
-                description_text[i : i + 40]
-                for i in range(0, len(description_text), 40)
+                description_text[i: i + 50]
+                for i in range(0, len(description_text), 50)
             )
 
             value_item = QTableWidgetItem(wrapped_text)
