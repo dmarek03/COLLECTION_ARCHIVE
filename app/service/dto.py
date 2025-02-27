@@ -23,7 +23,18 @@ class CreateFinalItemDto:
     epoch_name: str | None = None
     year: int | str = None
 
+    @staticmethod
+    def coordinates_to_dms(value: float) -> tuple[float, float, float]:
+        degrees = int(value)
+        minutes_full = abs(value - degrees) * 60
+        minutes = int(minutes_full)
+        seconds = abs(minutes_full - minutes) * 60
+
+        return degrees, minutes, seconds
+
     def __repr__(self):
+        lat_deg, lat_min, lat_sec = self.coordinates_to_dms(value=self.latitude)
+        log_deg, log_min, log_sec = self.coordinates_to_dms(value=self.longitude)
         return f"""
                Name: {self.name}
                Description: {self.description}
@@ -35,7 +46,9 @@ class CreateFinalItemDto:
                Name of finder: {self.finder_name}
                Name of locality: {self.locality_name}
                Name of location: {self.location_name if self.location_name else 'Indefinite'}
-               Coordinates: {self.latitude}°{self.latitude_direction} , {self.longitude}°{self.longitude_direction}
+               Coordinates: 
+               {lat_deg}°{lat_min}′{lat_sec}″ {self.latitude_direction} , 
+               {log_deg}°{log_min}′{log_sec}″{self.longitude_direction}
                Name of material: {self.material_name}
                Name of the epoch: {self.epoch_name}
                Year: {self.year if self.year else 'Indefinite'}
