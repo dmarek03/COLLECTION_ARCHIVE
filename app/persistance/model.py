@@ -55,3 +55,9 @@ class Dating(BaseTable):
 @dataclass
 class WishItem(BaseTable):
     image_data: bytes | None = None
+    season_id: int | None = None
+
+
+@dataclass
+class Season(BaseTable):
+    pass
