@@ -54,3 +54,18 @@ class CreateFinalItemDto:
                Year: {self.year if self.year else 'Indefinite'}
 
            """
+
+
+@dataclass
+class CreatFinalWishItemDto:
+    id: int | None = None
+    name: str | None = None
+    image_data: bytes | None = None
+    season_name: str | None = None
+
+    def __repr__(self):
+        return f"""
+        Name: {self.name},
+        Image_data: {len(self.image_data)},
+        Name of season: {self.season_name}
+        """
