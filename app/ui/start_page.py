@@ -8,12 +8,14 @@ from app.ui.wishlist_page import WishListPage
 from app.ui.add_wishlist_items_page import AddWishlistItemsPage
 from app.utilities.button_style import main_button_style
 from app.service.final_item_service import FinalItemService
+from app.service.final_wish_item_service import FinalWishItemService
 
 
 class StartPage(QMainWindow):
-    def __init__(self, item_service: FinalItemService) -> None:
+    def __init__(self, item_service: FinalItemService, wish_item_service: FinalWishItemService) -> None:
         super().__init__()
         self.item_service = item_service
+        self.wish_item_service = wish_item_service
 
         self.setWindowTitle("Collection Archive")
         self.setGeometry(100, 100, 500, 500)
@@ -27,8 +29,8 @@ class StartPage(QMainWindow):
         my_collection_window = CollectionPage(self.item_service, self.stacked_widget)
         add_item_window = AddItemPage(self.item_service, self.stacked_widget)
         settings_page = SettingPage(self.stacked_widget)
-        wishlist_page = WishListPage(self.stacked_widget)
-        add_wishlist_page = AddWishlistItemsPage(self.stacked_widget)
+        wishlist_page = WishListPage(self.wish_item_service, self.stacked_widget)
+        add_wishlist_page = AddWishlistItemsPage(self.wish_item_service, self.stacked_widget)
 
         self.stacked_widget.addWidget(my_collection_window)
         self.stacked_widget.addWidget(add_item_window)
