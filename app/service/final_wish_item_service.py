@@ -14,7 +14,19 @@ class FinalWishItemService:
 
         return self.wishlist_repository.insert(
             item=WishItem(
-                name=item.name, image_data=item.image_data, season_id=season_id
+                name=item.name, image_data=item.image_data, founded=item.founded,  season_id=season_id
+            )
+        )
+
+    def update_wishlist_item(self, item: CreatFinalWishItemDto) -> int:
+        season_id = self.season_repository.find_item_id(item=Season(name=item.season_name))
+        return self.wishlist_repository.update(
+            old_item_id=item.id,
+            updated_item=WishItem(
+                name=item.name,
+                image_data=item.image_data,
+                founded=item.founded,
+                season_id=season_id
             )
         )
 
