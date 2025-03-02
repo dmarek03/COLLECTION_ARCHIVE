@@ -55,6 +55,7 @@ class Dating(BaseTable):
 @dataclass
 class WishItem(BaseTable):
     image_data: bytes | None = None
+    founded: bool = False
     season_id: int | None = None
 
 

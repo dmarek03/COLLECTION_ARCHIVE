@@ -61,11 +61,13 @@ class CreatFinalWishItemDto:
     id: int | None = None
     name: str | None = None
     image_data: bytes | None = None
+    founded: bool = False
     season_name: str | None = None
 
     def __repr__(self):
         return f"""
         Name: {self.name},
         Image_data: {len(self.image_data)},
+        Founded: {self.founded}
         Name of season: {self.season_name}
         """

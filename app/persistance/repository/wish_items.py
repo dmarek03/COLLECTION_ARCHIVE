@@ -17,6 +17,7 @@ class WishItemsRepository(CrudRepository):
                     id integer primary key auto_increment,
                     name varchar(50) not null,
                     image_data LONGBLOB  not null ,
+                    founded BOOL not null,
                     season_id integer,
                     unique(name),
                     foreign key (season_id) references seasons(id) on delete cascade on update cascade 
@@ -43,7 +44,7 @@ class WishItemsRepository(CrudRepository):
             connection = self.connection_pool.get_connection()
             cursor = connection.cursor()
             sql = f""" 
-                       select w.id, w.name, w.image_data, s.name from wish_items w 
+                       select w.id, w.name, w.image_data, w.founded, s.name from wish_items w 
                        join seasons s on s.id = w.season_id where s.name = '{season_name}' order by s.name desc 
                    """
             cursor.execute(sql)
