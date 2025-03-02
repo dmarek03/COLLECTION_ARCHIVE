@@ -33,10 +33,10 @@ class AddWishlistItemsPage(QWidget):
 
     def init_ui(self) -> None:
 
-
         page_label = QLabel('Create Wish List')
         page_label.setFont(QFont("Cambria Math", 30))
         page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        page_label.setMaximumHeight(100)
 
         selection_layout = QHBoxLayout()
         selection_layout.setSpacing(30)
@@ -116,11 +116,12 @@ class AddWishlistItemsPage(QWidget):
             for _ in range(min(8, items_count)):
                 widget = QWidget()
 
+
                 item_layout = QGridLayout()
                 item_layout.setSpacing(10)
 
                 image = PhotoDropout()
-                image.set_size(w_size=120, h_size=120)
+                image.set_size(w_size=100, h_size=100)
                 item_name = QLineEdit()
                 item_name.setPlaceholderText('Enter item name')
 
@@ -162,6 +163,8 @@ class AddWishlistItemsPage(QWidget):
         if self.validate_added_items():
             self.create_wish_items()
             QMessageBox.information(self, 'Submission correct', 'Wishlist created successfully')
+            wishlist_page = self.stacked_widget.widget(4)
+            wishlist_page.init_wishlist_left_bar()
             self.clear_items()
             self.create_wish_list_button.setVisible(False)
             self.add_items_button.setVisible(True)
