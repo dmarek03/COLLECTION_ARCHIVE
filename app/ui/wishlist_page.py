@@ -1,9 +1,10 @@
-import sys
-from PyQt6.QtCore import Qt, QDateTime
-from PyQt6.QtGui import QFont, QPixmap, QPainter, QPen
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import *
 from app.utilities.button_style import main_button_style
 from app.service.final_wish_item_service import FinalWishItemService
+from app.ui.wishlist_single_page import WishSingleListPage
+
 from functools import partial
 
 
@@ -13,11 +14,11 @@ class WishListPage(QWidget):
         self.wish_item_service = wish_item_service
         self.stacked_page = stacked_page
         self.layout = QGridLayout(self)
-        self.frame_layout = None
-        self.current_frame = QFrame(self)
+        self.current_frame = None
         self.item_list = []
         self.checkbox_list = []
         self.wishlist_names = []
+        self.wishlists = {}
         self.init_ui()
 
     def init_ui(self) -> None:
@@ -39,10 +40,20 @@ class WishListPage(QWidget):
         self.layout.addWidget(create_wishlist_button, 5, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
         self.setLayout(self.layout)
         self.init_wishlist_left_bar()
-        self.show_wishlist(season_name=self.wishlist_names[0])
+        self.show_wishlist()
 
     def init_wishlist_left_bar(self) -> None:
         self.wishlist_names = self.wish_item_service.season_repository.get_all_seasons_name()
+
+        for name in self.wishlist_names:
+            if not self.wishlists.get(name):
+                item_list = self.wish_item_service.wishlist_repository.get_items_where_value_equals(season_name=name)
+                self.wishlists[name] = WishSingleListPage(
+                    wish_item_service=self.wish_item_service,
+                    name=name,
+                    parent=self,
+                    item_list=item_list
+                )
 
         left_bar_layout = QVBoxLayout()
         left_bar_layout.setSpacing(10)
@@ -66,7 +77,7 @@ class WishListPage(QWidget):
 
                 """)
 
-            label.mousePressEvent = lambda _, w=season: self.show_wishlist(season_name=w)
+            label.mousePressEvent = partial(self.on_wishlist_clicked, season)
             left_bar_layout.addWidget(label, Qt.AlignmentFlag.AlignHCenter)
 
         container = QWidget()
@@ -74,121 +85,24 @@ class WishListPage(QWidget):
 
         self.layout.addWidget(container, 2, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
 
+    def on_wishlist_clicked(self, season_name: str, event) -> None:
+        self.show_wishlist(season_name)
+
     def show_wishlist(self, season_name: str | None = None) -> None:
         if self.current_frame:
             self.layout.removeWidget(self.current_frame)
-            self.current_frame.deleteLater()
-            self.current_frame = None
+            self.current_frame.setParent(None)
 
-        self.checkbox_list.clear()
-        self.item_list = self.wish_item_service.wishlist_repository.get_items_where_value_equals(
-            season_name=season_name)
-
-        self.current_frame = QFrame(self)
-        self.current_frame.setFrameShape(QFrame.Shape.Box)
-        self.current_frame.setFrameShadow(QFrame.Shadow.Sunken)
-
-        wishlist_layout = QVBoxLayout(self.current_frame)
-        wishlist_layout.setSpacing(15)
-        wishlist_layout.setContentsMargins(30, 10, 30, 10)
-        wishlist_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        season_name_label = QLabel(f'Season {season_name}')
-        season_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        season_name_label.setFont(QFont('Cambria math', 15))
-        season_name_label.setMaximumHeight(30)
-
-        self.complete_ratio = QLabel(f'Complete: {self.calculate_complete_ratio()}%')
-        self.complete_ratio.setFont(QFont('Cambria math', 15))
-        self.complete_ratio.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.complete_ratio.setMaximumHeight(30)
-
-        wishlist_layout.addWidget(season_name_label)
-        wishlist_layout.addWidget(self.complete_ratio)
-        wishlist_layout.addSpacing(10)
-
-        items_per_row = 8
-        for row_idx in range(0, len(self.item_list), items_per_row):
-            row_items = self.item_list[row_idx:row_idx + items_per_row]
-
-            row_layout = QHBoxLayout()
-            row_layout.setSpacing(20)
-            row_layout.setContentsMargins(0, 0, 0, 0)
-
-            row_layout.addStretch()
-
-            for item in row_items:
-                item_layout = QVBoxLayout()
-                item_layout.setSpacing(5)
-                item_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-                item_name = QLabel(f'<b>{item.name}</b>')
-                item_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-                image_label = QLabel()
-                pixmap = QPixmap()
-                pixmap.loadFromData(item.image_data)
-                image_label.setPixmap(pixmap.scaled(120, 120, Qt.AspectRatioMode.KeepAspectRatio))
-                image_label.original_pixmap = image_label.pixmap()
-
-                founded_layout = QHBoxLayout()
-                founded_checkbox = QCheckBox()
-                founded_checkbox.stateChanged.connect(partial(self.toggle_cross, founded_checkbox, image_label))
-                self.checkbox_list.append(founded_checkbox)
-                founded_layout.addWidget(QLabel("<b>Found:</b>"))
-                founded_layout.addWidget(founded_checkbox)
-                founded_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-                item_layout.addWidget(image_label)
-                item_layout.addWidget(item_name)
-                item_layout.addLayout(founded_layout)
-
-                row_layout.addLayout(item_layout)
-
-            row_layout.addStretch()
-            wishlist_layout.addLayout(row_layout)
+        if self.wishlists.get(season_name):
+            self.current_frame = self.wishlists[season_name]
+        elif self.wishlist_names:
+            self.current_frame = self.wishlists[self.wishlist_names[0]]
 
         self.layout.addWidget(self.current_frame, 2, 0, 3, 3, Qt.AlignmentFlag.AlignCenter)
 
-    def toggle_cross(self, checkbox, image_label) -> None:
-        if checkbox.isChecked():
-            self.mark_founded_item(image_label)
-            self.update_complete_ratio()
-        else:
-            image_label.setPixmap(image_label.original_pixmap)
-            self.update_complete_ratio()
-
-    def calculate_complete_ratio(self) -> float:
-        return 100 * sum(1 for cb in self.checkbox_list if cb.isChecked()) // len(
-            self.checkbox_list) if self.checkbox_list else 0
-
-    def update_complete_ratio(self) -> None:
-        self.complete_ratio.setText(f'Complete: {self.calculate_complete_ratio()}%')
-
-    @staticmethod
-    def mark_founded_item(widget) -> None:
-        pixmap = widget.pixmap().copy()
-        painter = QPainter(pixmap)
-        painter.setPen(QPen(Qt.GlobalColor.red, 2))
-
-        width, height = pixmap.width(), pixmap.height()
-
-        painter.drawLine(0, 0, width, height)
-        painter.drawLine(width, 0, 0, height)
-
-        painter.end()
-        widget.setPixmap(pixmap)
-
-    def clear_layout(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                print(widget)
-                widget.deleteLater()
-            else:
-                print(item)
-                self.clear_layout(item.layout())
+    def on_close_event(self):
+        for wishlist in self.wishlists.values():
+            wishlist.save_pending_updates()
 
     def go_to_start_page(self) -> None:
         self.stacked_page.setCurrentIndex(0)
